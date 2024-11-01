@@ -7,20 +7,12 @@ class Configuration {
 public:
     /// @brief Structure with config itself
     struct Config {
-        /// @brief String with device ip
-        std::string deviceIp;
-
-        /// @brief String with ip-mask
-        std::string deviceNetworkMask;
-
-        /// @brief String with device name
-        std::string deviceName;
-        
-        /// @brief Number of days after which archived data will be deleted
-        std::uint16_t dataRetentionPeriod;
-        
-        /// @brief Port number which is associated with backend server
-        std::uint16_t backendServerPort;
+        std::string deviceIp;                   // String with device ip
+        std::string deviceNetworkMask;          // String with ip-mask
+        std::string deviceName;                 // String with device name
+        std::uint16_t dataRetentionPeriod;      // Number of days after which archived data will be deleted
+        std::uint16_t backendServerPort;        // Port number which is associated with backend server
+        std::uint16_t communicationServerPort;  // Port number which is associated with communication server
     };
 
     /// @brief Structure with configuration 

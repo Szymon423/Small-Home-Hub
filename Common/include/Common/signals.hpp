@@ -6,7 +6,6 @@
 #include <cstdint>
 #include <vector>
 #include <chrono>
-#include <variant>
 
 /// @brief Namespace for stuff related to signals from configuratuion database
 namespace Signals {
@@ -60,9 +59,9 @@ namespace Signals {
         /// @return JSON object with AnalogDefinition related variables
         nlohmann::json ToJson();
     
-        /// @brief Function to read all SignalDefinition from Configuration Database
-        /// @return Vector of SignalDefinition 
-        static std::vector<SignalDefinition> GetFromDatabase();
+        /// @brief Function to read all Definition from Configuration Database
+        /// @return Vector of Definition 
+        static std::vector<Definition> GetFromDatabase();
     };
     
     /// @brief Structure holding value and flags of analog signal

@@ -1,0 +1,60 @@
+# Base Debian Bullseye image for arm64v8 architecture - Raspberry Pi 64 bit OS (Legacy) Lite
+FROM arm64v8/debian:bookworm
+
+# Dependencies for vcpkg
+RUN apt update && apt install -y \
+    git \
+    curl \
+    zip \
+    unzip \
+    tar \
+    build-essential \
+    pkg-config \
+    ninja-build \
+    wget \
+    gcc-aarch64-linux-gnu \
+    g++-aarch64-linux-gnu \
+    sqlite3 \
+    libpthread-stubs0-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install CMake 3.29
+RUN curl -LO https://github.com/Kitware/CMake/releases/download/v3.29.6/cmake-3.29.6-linux-aarch64.sh \
+    && chmod +x cmake-3.29.6-linux-aarch64.sh \
+    && ./cmake-3.29.6-linux-aarch64.sh --skip-license --prefix=/usr/local \
+    && rm cmake-3.29.6-linux-aarch64.sh
+
+# Set environmental variable for vcpkg, second one is needed becouse of vcpkg 
+ENV VCPKG_ROOT /usr/local/vcpkg
+ENV VCPKG_FORCE_SYSTEM_BINARIES=1
+
+# Now clone and bootstrap vcpkg
+RUN git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT \
+    && cd $VCPKG_ROOT \
+    && ./bootstrap-vcpkg.sh
+
+# Add vcpkg to system path
+ENV PATH="$VCPKG_ROOT:$PATH"
+
+# Update vcpkg for new vcpkg packages definitions
+RUN vcpkg update
+
+# Install what is necessary via vcpkg with cleaning after all
+RUN vcpkg install boost-system \
+    boost-filesystem \
+    boost-chrono \
+    boost-process \
+    boost-interprocess --clean-after-build
+
+# Install other
+RUN vcpkg install spdlog --clean-after-build
+RUN vcpkg install nlohmann-json --clean-after-build
+RUN vcpkg install sqlitecpp --clean-after-build
+RUN vcpkg install cpr --clean-after-build
+RUN vcpkg install poco poco[netssl] --clean-after-build
+RUN vcpkg install cppzmq --clean-after-build
+
+# Dependecies for YAPL
+RUN rm /var/lib/dpkg/info/libc-bin.*
+RUN apt clean && apt update && apt install -y libc-bin \

@@ -13,7 +13,7 @@
 #include <thread>
 #include <chrono>
 
-#define SHMEM_NAME "SCCSharedMemory"
+#define SHMEM_NAME "SHH-Shared-Memory"
 
 namespace bip = boost::interprocess;
 
@@ -21,8 +21,7 @@ namespace bip = boost::interprocess;
 namespace SharedMemory {
     /// @brief Structure with information about signals number
     struct Header {
-        std::uint16_t numberOfBinarySignals{ 0 };
-        std::uint16_t numberOfAnalogSignals{ 0 };
+        std::uint16_t numberOfSignals{ 0 };
     };
 
     // Save the current alignment setting and set the alignment to 1 byte
@@ -36,23 +35,14 @@ namespace SharedMemory {
         /// @brief Header with signal number information                    
         Header header;
 
-        /// @brief Definitions of analog signals
-        Signals::AnalogDefinition analogDefinitions[SystemConstants::AnalogSignalsNumber];
-        
-        /// @brief Definitions of binary signals
-        Signals::BinaryDefinition binaryDefinitions[SystemConstants::BinarySignalsNumber];
+        /// @brief Definitions of signals
+        Signals::Definition Definitions[SystemConstants::MaxSignalsNumber];
         
         /// @brief Current analog signals values
-        Signals::AnalogValue currentAnalogValues[SystemConstants::AnalogSignalsNumber];
+        Signals::Value currentValues[SystemConstants::MaxSignalsNumber];
         
         /// @brief Previous analog signals values
-        Signals::AnalogValue previousAnalogValues[SystemConstants::AnalogSignalsNumber];
-        
-        /// @brief Current binary signals values
-        Signals::BinaryValue currentBinaryValues[SystemConstants::BinarySignalsNumber];
-        
-        /// @brief Previous binary signals values
-        Signals::BinaryValue previousBinaryValues[SystemConstants::BinarySignalsNumber];
+        Signals::Value previousValues[SystemConstants::MaxSignalsNumber];
     };
 
     // Restore the previous alignment setting

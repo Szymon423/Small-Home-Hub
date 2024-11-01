@@ -21,14 +21,12 @@ file(GLOB COMMON_HEADERS
 
 set_source_files_properties("src/shared_memory.cpp" PROPERTIES COMPILE_FLAGS "-fPIC")
 
-find_package(libmodbus REQUIRED)
 find_package(spdlog REQUIRED)
 
 add_library(Common ${COMMON_SOURCES} ${COMMON_HEADERS})
 
 target_link_libraries(Common PRIVATE 
     spdlog::spdlog
-    modbus
     pthread
     rt
     cppzmq

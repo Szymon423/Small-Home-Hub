@@ -1,0 +1,1 @@
+cd Docker/arm64_Compiler_Image && docker build --tag szymon432/arm64-compiler-image:latest . 
