@@ -1,0 +1,3 @@
+/Server-Cabinet-Controller/Common/Build/arm64/Release/CMakeFiles/Common.dir
+/Server-Cabinet-Controller/Common/Build/arm64/Release/CMakeFiles/edit_cache.dir
+/Server-Cabinet-Controller/Common/Build/arm64/Release/CMakeFiles/rebuild_cache.dir

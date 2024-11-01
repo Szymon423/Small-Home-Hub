@@ -1,0 +1,1 @@
+# Wspólne pliki systemowe
