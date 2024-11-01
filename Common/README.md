@@ -1,1 +1,1 @@
-# Wspólne pliki systemowe
+# Common library for this project

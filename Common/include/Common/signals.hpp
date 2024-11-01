@@ -46,7 +46,7 @@ namespace Signals {
     /// @brief Class holding signal definition
     class Definition {
     public:
-        std::uint16_t signalID{ 0 };            // ID of signal
+        std::uint16_t ID{ 0 };                  // ID of signal
         std::uint16_t groupID{ 0 };             // ID of associated group
         DataType dataType{ DataType::Unknown }; // Data type of this signal 
         Alarm alarmLow;                         // Alarm low thing
