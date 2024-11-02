@@ -4,9 +4,9 @@ file(GLOB SOURCES
      "*.h"
 )
 
-add_library(Backend_Server_lib ${SOURCES})
+add_library(Communication_Server_lib ${SOURCES})
 
-target_link_libraries(Backend_Server_lib PRIVATE 
+target_link_libraries(Communication_Server_lib PRIVATE 
      spdlog::spdlog
      fmt::fmt
      Poco::Net
@@ -17,7 +17,7 @@ target_link_libraries(Backend_Server_lib PRIVATE
      cpr::cpr
 )
 
-target_include_directories(Backend_Server_lib PUBLIC 
+target_include_directories(Communication_Server_lib PUBLIC 
      ${CMAKE_CURRENT_SOURCE_DIR}
      ${CMAKE_SOURCE_DIR}/../Common/include
 )

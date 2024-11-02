@@ -7,7 +7,7 @@ project(Communication_Server VERSION 1.0.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-add_executable(Backend_Server main.cpp)
+add_executable(Communication_Server main.cpp)
 
 find_package(spdlog REQUIRED)
 find_package(fmt REQUIRED)

@@ -1,5 +1,5 @@
 ﻿#include "backend.hpp"
-#include "data_collecting.hpp"
+#include "data.hpp"
 #include "authentication.hpp"
 #include "diagnostics.hpp"
 #include <Common/runtime.hpp>
@@ -9,7 +9,8 @@
 #include <iostream>
 
 std::map<std::pair<std::string, std::string>, MyRequestHandler::RouteHandler> MyRequestHandler::routes = {
-    {{"POST", "/api/data/collect"}, std::bind(&DataCollecting::collect, std::placeholders::_1, std::placeholders::_2)},
+    {{"POST", "/api/data/collect"}, std::bind(&Data::collect, std::placeholders::_1, std::placeholders::_2)},
+    {{"GET",  "/api/data/get"}, std::bind(&Data::get, std::placeholders::_1, std::placeholders::_2)},
     {{"POST", "/api/authentication/login"}, std::bind(&Authentication::login, std::placeholders::_1, std::placeholders::_2)},
     {{"GET",  "/api/diagnostics/status"}, std::bind(&Diagnostics::status, std::placeholders::_1, std::placeholders::_2)}
 };
@@ -63,7 +64,7 @@ int MyServerApp::run() {
 
 int MyServerApp::main(const std::vector<std::string>& args) {
     auto config = Configuration::Get();
-    Poco::Net::HTTPServer s(new MyRequestHandlerFactory, config.backend_server_port);
+    Poco::Net::HTTPServer s(new MyRequestHandlerFactory, config.communicationServerPort);
     s.start();
     while (Runtime::Run()) {
         Poco::Thread::sleep(100);
