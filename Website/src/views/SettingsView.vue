@@ -1,5 +1,6 @@
 <template>
 	<div class="settings-container">
+		<LoadingOverlay :is-visible="isLoading" :message="loadingMessage"/>
 		<h1 class="settings-title">
 			<Settings class="settings-icon" />
 			Device Settings
@@ -112,6 +113,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import axios from 'axios'
+import LoadingOverlay from '../components/loadingOverlay.vue'
 import {
 	Settings,
 	Network,
@@ -127,6 +130,10 @@ import {
 	XCircle
 } from 'lucide-vue-next'
 
+// For loading overlay
+const isLoading = ref(false)
+const loadingMessage = ref('')
+
 const settings = ref({
 	deviceIp: '',
 	deviceSubnetMask: '',
@@ -138,25 +145,66 @@ const settings = ref({
 
 const originalSettings = ref({})
 
-// Simulation of fetching settings from API
 const fetchSettings = async () => {
-	// Here will be actual data fetching
-	settings.value = {
-		deviceIp: '192.168.1.100',
-		deviceSubnetMask: '255.255.255.0',
-		deviceName: 'Device-01',
-		dataRetentionPeriod: '30',
-		backendServerPort: '8080',
-		communicationServerPort: '9090'
-	}
-	originalSettings.value = { ...settings.value }
+    isLoading.value = true
+    loadingMessage.value = 'Loading settings...'
+    
+    try {
+        const response = await axios.get('http://localhost:9999/api/configuration/get')
+        settings.value = response.data
+        originalSettings.value = { ...response.data }
+    } catch (error) {
+        console.error('Błąd podczas pobierania ustawień:', error)
+        throw error
+    } finally {
+        isLoading.value = false
+    }
 }
 
 const saveSettings = async () => {
-	// Here will be actual data saving
-	console.log('Saving settings:', settings.value)
-	originalSettings.value = { ...settings.value }
-}
+    const dataToUpdate = Object.entries(settings.value).reduce((acc, [key, value]) => {
+        if (originalSettings.value[key] !== value) {
+            acc[key] = value;
+        }
+        return acc;
+    }, {});
+
+    if (Object.keys(dataToUpdate).length === 0) {
+        console.log('No changes to save');
+        return;
+    }
+
+    isLoading.value = true
+    loadingMessage.value = 'Saving changes...'
+
+    try {
+        const response = await axios.post('http://localhost:9999/api/configuration/update',
+		    dataToUpdate, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        if (response.status === 200) {
+            console.log('Settings saved successfully:', dataToUpdate);
+            await fetchSettings();
+        }
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            console.error('Błąd podczas zapisywania ustawień:', {
+                message: error.message,
+                status: error.response?.status,
+                data: error.response?.data
+            });
+        } else {
+            console.error('Nieoczekiwany błąd:', error);
+        }
+        throw error;
+    } finally {
+        isLoading.value = false
+    }
+};
 
 const resetSettings = () => {
 	settings.value = { ...originalSettings.value }

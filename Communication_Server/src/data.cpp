@@ -28,6 +28,7 @@ namespace Data {
 
     void collect(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) noexcept {
         try {
+            Logger::trace("Collecting data.");
             // Parse JSON from request body
             nlohmann::json requestBody;
             try {
@@ -49,7 +50,7 @@ namespace Data {
             static std::map<int, int> IDToPosition;
             initializeIDMap(IDToPosition);
 
-            for (const auto& item : requestBody["data"]) {
+            for (const auto& item : requestBody["Data"]) {
                 // Validate ID
                 Utilities::JSON::Validate({{ "ID", Utilities::JSON::FieldDataType::Integer, true }}, item);
                 const int ID = item["ID"].get<int>();
@@ -60,9 +61,11 @@ namespace Data {
                 const int position = it->second;
 
                 shmem->previousValues[position] = shmem->currentValues[position];
+                shmem->currentValues[position].timestamp = std::chrono::system_clock::now();
+                shmem->currentValues[position].valid = true;
                 switch (shmem->definitions[position].dataType) {
                     case Signals::DataType::Analog: {
-                        Utilities::JSON::Validate({{ "Value", Utilities::JSON::FieldDataType::Integer, true }}, item);
+                        Utilities::JSON::Validate({{ "Value", Utilities::JSON::FieldDataType::Float, true }}, item);
                         const double value = item["Value"].get<double>();
                         Logger::trace("Updating signal with ID: {} with value: {}", ID, value);
                         shmem->currentValues[position].analog = value;
@@ -83,13 +86,13 @@ namespace Data {
                         break;
                     }
                     default: {
+                        shmem->currentValues[position].valid = false;
                         throw std::runtime_error("Signal in system with ID: " + std::to_string(ID) + " has invalid data type.");
                     }
                 }
-                shmem->currentValues[position].timestamp = std::chrono::system_clock::now();
             }
 
-            nlohmann::json j = { "message", "Succesfully updated signal."};
+            nlohmann::json j = { "message", "Succesfully updated signals."};
             response.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
             response.setContentType("application/json");
             std::ostream& out = response.send();
@@ -101,7 +104,7 @@ namespace Data {
             std::ostream& out = response.send();
             nlohmann::json errorJson = {{"status", "error"}, {"message", e.what()}};
             out << errorJson.dump();
-            Logger::error("Error retrieving signal definitions: {}", e.what());
+            Logger::error("Error collecting signal value: {}", e.what());
         }
     }
 

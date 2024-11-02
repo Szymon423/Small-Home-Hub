@@ -12,44 +12,105 @@ namespace SignalValues {
             nlohmann::json result = nlohmann::json::array();
             auto shmem = SharedMemory::Manager::Get();
             for (std::size_t i = 0; i < shmem->header.numberOfSignals; ++i) {
-                
-                nlohmann::json currentValue;
+                nlohmann::json item;
                 switch (shmem->definitions[i].dataType) {
-                    case Signals::DataType::Analog: currentValue["value"] = shmem->currentValues[i].analog; break;
-                    case Signals::DataType::Binary: currentValue["value"] = shmem->currentValues[i].binary; break;
-                    case Signals::DataType::Text: currentValue["value"] = shmem->currentValues[i].text; break;
-                    default: currentValue["value"] = "?????"; break;
-                }
-
-                nlohmann::json previousValue;
-                switch (shmem->definitions[i].dataType) {
-                    case Signals::DataType::Analog: previousValue["value"] = shmem->previousValues[i].analog; break;
-                    case Signals::DataType::Binary: previousValue["value"] = shmem->previousValues[i].binary; break;
-                    case Signals::DataType::Text: previousValue["value"] = shmem->previousValues[i].text; break;
-                    default: previousValue["value"] = "?????"; break;
-                }
-
-                nlohmann::json item = {
-                    { "ID", shmem->definitions[i].ID },
-                    { 
-                        "Current", {
-                            currentValue,
-                            { "Valid", shmem->currentValues[i].valid },
-                            { "AlarmLow", shmem->currentValues[i].alarmLow },
-                            { "AlarmHigh", shmem->currentValues[i].alarmHigh },
-                            { "Timestamp", shmem->currentValues[i].timestamp.time_since_epoch().count() }
-                        },
-                    },
-                    {
-                        "Previous", {
-                            previousValue,
-                            { "Valid", shmem->previousValues[i].valid },
-                            { "AlarmLow", shmem->previousValues[i].alarmLow },
-                            { "AlarmHigh", shmem->previousValues[i].alarmHigh },
-                            { "Timestamp", shmem->previousValues[i].timestamp.time_since_epoch().count() }
-                        }
+                    case Signals::DataType::Analog: {
+                        item = {
+                            { "ID", shmem->definitions[i].ID },
+                            { 
+                                "Current", {
+                                    { "Value", shmem->currentValues[i].analog },
+                                    { "Valid", shmem->currentValues[i].valid },
+                                    { "AlarmLow", shmem->currentValues[i].alarmLow },
+                                    { "AlarmHigh", shmem->currentValues[i].alarmHigh },
+                                    { "Timestamp", shmem->currentValues[i].timestamp.time_since_epoch().count() }
+                                },
+                            },
+                            {
+                                "Previous", {
+                                    { "Value", shmem->previousValues[i].analog },
+                                    { "Valid", shmem->previousValues[i].valid },
+                                    { "AlarmLow", shmem->previousValues[i].alarmLow },
+                                    { "AlarmHigh", shmem->previousValues[i].alarmHigh },
+                                    { "Timestamp", shmem->previousValues[i].timestamp.time_since_epoch().count() }
+                                }
+                            }
+                        };
+                        break;
                     }
-                };
+                    case Signals::DataType::Binary: {
+                        item = {
+                            { "ID", shmem->definitions[i].ID },
+                            { 
+                                "Current", {
+                                    { "Value", shmem->currentValues[i].binary },
+                                    { "Valid", shmem->currentValues[i].valid },
+                                    { "AlarmLow", shmem->currentValues[i].alarmLow },
+                                    { "AlarmHigh", shmem->currentValues[i].alarmHigh },
+                                    { "Timestamp", shmem->currentValues[i].timestamp.time_since_epoch().count() }
+                                },
+                            },
+                            {
+                                "Previous", {
+                                    { "Value", shmem->previousValues[i].binary },
+                                    { "Valid", shmem->previousValues[i].valid },
+                                    { "AlarmLow", shmem->previousValues[i].alarmLow },
+                                    { "AlarmHigh", shmem->previousValues[i].alarmHigh },
+                                    { "Timestamp", shmem->previousValues[i].timestamp.time_since_epoch().count() }
+                                }
+                            }
+                        };
+                        break;
+                    }
+                    case Signals::DataType::Text: {
+                        item = {
+                            { "ID", shmem->definitions[i].ID },
+                            { 
+                                "Current", {
+                                    { "Value", shmem->currentValues[i].text },
+                                    { "Valid", shmem->currentValues[i].valid },
+                                    { "AlarmLow", shmem->currentValues[i].alarmLow },
+                                    { "AlarmHigh", shmem->currentValues[i].alarmHigh },
+                                    { "Timestamp", shmem->currentValues[i].timestamp.time_since_epoch().count() }
+                                },
+                            },
+                            {
+                                "Previous", {
+                                    { "Value", shmem->previousValues[i].text },
+                                    { "Valid", shmem->previousValues[i].valid },
+                                    { "AlarmLow", shmem->previousValues[i].alarmLow },
+                                    { "AlarmHigh", shmem->previousValues[i].alarmHigh },
+                                    { "Timestamp", shmem->previousValues[i].timestamp.time_since_epoch().count() }
+                                }
+                            }
+                        };
+                        break;
+                    }
+                    default: {
+                        item = {
+                            { "ID", shmem->definitions[i].ID },
+                            { 
+                                "Current", {
+                                    { "Value", "?????" },
+                                    { "Valid", shmem->currentValues[i].valid },
+                                    { "AlarmLow", shmem->currentValues[i].alarmLow },
+                                    { "AlarmHigh", shmem->currentValues[i].alarmHigh },
+                                    { "Timestamp", shmem->currentValues[i].timestamp.time_since_epoch().count() }
+                                },
+                            },
+                            {
+                                "Previous", {
+                                    { "Value", "?????" },
+                                    { "Valid", shmem->previousValues[i].valid },
+                                    { "AlarmLow", shmem->previousValues[i].alarmLow },
+                                    { "AlarmHigh", shmem->previousValues[i].alarmHigh },
+                                    { "Timestamp", shmem->previousValues[i].timestamp.time_since_epoch().count() }
+                                }
+                            }
+                        };
+                        break;
+                    }
+                }
                 result.push_back(item);
             }
 

@@ -29,7 +29,7 @@ int main() {
 
     // Init configuration database
     try {
-        ConfigDB::Init("/Small-Home-Hub/DB/config.db");
+        ConfigDB::Init("/Small-Home-Hub/Database/config.db");
     }
     catch (const std::runtime_error& e) {
         Logger::critical("Error connecting to database, SQLite error: {}.", e.what());

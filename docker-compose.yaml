@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  small-home-hub:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: Test-Platform
+    ports:
+      - "9990:9990"
+      - "9991:9991"
+      - "9999:9999"
+    restart: always

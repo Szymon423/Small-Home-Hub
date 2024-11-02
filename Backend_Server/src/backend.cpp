@@ -14,11 +14,9 @@
 
 std::map<std::pair<std::string, std::string>, MyRequestHandler::RouteHandler> MyRequestHandler::routes = {
     {{"GET",  "/api/configuration/get"}, std::bind(&SystemConfiguration::get_all, std::placeholders::_1, std::placeholders::_2)},
+    {{"POST", "/api/configuration/update"}, std::bind(&SystemConfiguration::update, std::placeholders::_1, std::placeholders::_2)},
     {{"POST", "/api/configuration/import"}, std::bind(&SystemConfiguration::import_db, std::placeholders::_1, std::placeholders::_2)},
     {{"GET",  "/api/configuration/export"}, std::bind(&SystemConfiguration::export_db, std::placeholders::_1, std::placeholders::_2)},
-    {{"POST", "/api/configuration/update_network"}, std::bind(&SystemConfiguration::update_network, std::placeholders::_1, std::placeholders::_2)},
-    {{"POST", "/api/configuration/update_device_name"}, std::bind(&SystemConfiguration::update_device_name, std::placeholders::_1, std::placeholders::_2)},
-    {{"POST", "/api/configuration/update_data_retention_period"}, std::bind(&SystemConfiguration::update_data_retention_period, std::placeholders::_1, std::placeholders::_2)},
     
     {{"GET",  "/api/signals/groups/get"}, std::bind(&GroupDefinitions::get_all, std::placeholders::_1, std::placeholders::_2)},
     {{"POST", "/api/signals/groups/add"}, std::bind(&GroupDefinitions::add_group, std::placeholders::_1, std::placeholders::_2)},

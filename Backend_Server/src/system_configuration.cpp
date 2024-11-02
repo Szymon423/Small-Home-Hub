@@ -77,7 +77,7 @@ namespace SystemConfiguration {
     /// @param key key of entry to update
     /// @param value value of entry to update
     /// @return pair of code and associated message
-    std::pair<Code, std::string> update(const std::string& key, const std::string& value) noexcept {
+    std::pair<Code, std::string> updateInDatabase(const std::string& key, const std::string& value) noexcept {
         try {
             // Blokujemy mutex przed operacjami na bazie danych
             std::lock_guard<std::mutex> lock(ConfigDB::GetMutex());
@@ -110,9 +110,9 @@ namespace SystemConfiguration {
         }
     }
 
-    void update_network(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) noexcept {
+    void update(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) noexcept {
         try {
-            Logger::trace("Updating device ip and mask in configuration database.");
+            Logger::trace("Updating device configuration.");
 
             // Parse JSON from request body
             nlohmann::json requestBody;
@@ -125,43 +125,87 @@ namespace SystemConfiguration {
 
             // Validate required fields
             static const std::vector<std::tuple<std::string, Utilities::JSON::FieldDataType, bool>> required_fields {
-                { "deviceIp", Utilities::JSON::FieldDataType::String, true },
-                { "deviceSubnetMask", Utilities::JSON::FieldDataType::String, true }
+                { "deviceIp", Utilities::JSON::FieldDataType::String, false },
+                { "deviceSubnetMask", Utilities::JSON::FieldDataType::String, false },
+                { "deviceName", Utilities::JSON::FieldDataType::String, false },
+                { "dataRetentionPeriod", Utilities::JSON::FieldDataType::Integer, false },
+                { "backendServerPort", Utilities::JSON::FieldDataType::Integer, false },
+                { "communicationServerPort", Utilities::JSON::FieldDataType::Integer, false },
             };
             Utilities::JSON::Validate(required_fields, requestBody);
-
-            std::string deviceIp = requestBody["deviceIp"].get<std::string>();
-            std::string deviceSubnetMask = requestBody["deviceSubnetMask"].get<std::string>();
 
             // RegEx for IPv4 validation
-            const std::regex ipPattern(R"((\b(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\b\.){3}(\b(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\b))");
+            static const std::regex ipPattern(R"((\b(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\b\.){3}(\b(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\b))");
+            
+            if (requestBody.contains("deviceIp")) {
+                Logger::trace("Updating device IP.");
+                std::string deviceIp = requestBody["deviceIp"].get<std::string>();
 
-            if (!std::regex_match(deviceIp, ipPattern)) {
-                throw std::runtime_error("Provided ip is not valid.");
-            }
-
-            if (!std::regex_match(deviceSubnetMask, ipPattern)) {
-                throw std::runtime_error("Provided subnet mask is not valid.");
-            }
-
-            {
-                auto [code, message] = update("device_ip", deviceIp);
-                if (code != Code::Success) {
-                    throw std::runtime_error("Could not update device_ip: " + message);
+                if (!std::regex_match(deviceIp, ipPattern)) {
+                    throw std::runtime_error("Provided ip is not valid.");
                 }
-            }
-            {
-                auto [code, message] = update("subnet_mask", deviceSubnetMask);
+
+                auto [code, message] = updateInDatabase("device_ip", deviceIp);
                 if (code != Code::Success) {
-                    throw std::runtime_error("Could not update subnet_mask: " + message);
+                    throw std::runtime_error("Could not update device IP: " + message);
                 }
             }
 
+            if (requestBody.contains("deviceSubnetMask")) {
+                Logger::trace("Updating subnet mask.");
+                std::string deviceSubnetMask = requestBody["deviceSubnetMask"].get<std::string>();
+
+                if (!std::regex_match(deviceSubnetMask, ipPattern)) {
+                    throw std::runtime_error("Provided subnet mask is not valid.");
+                }
+
+                auto [code, message] = updateInDatabase("deviceSubnetMask", deviceSubnetMask);
+                if (code != Code::Success) {
+                    throw std::runtime_error("Could not update device subnet mask: " + message);
+                }
+            }
+
+            if (requestBody.contains("deviceName")) {
+                std::string deviceName = requestBody["deviceName"].get<std::string>();
+
+                auto [code, message] = updateInDatabase("deviceName", deviceName);
+                if (code != Code::Success) {
+                    throw std::runtime_error("Could not update deviceName: " + message);
+                }
+            }
+
+            if (requestBody.contains("dataRetentionPeriod")) {
+                std::string dataRetentionPeriod = std::to_string(requestBody["dataRetentionPeriod"].get<int>());
+
+                auto [code, message] = updateInDatabase("dataRetentionPeriod", dataRetentionPeriod);
+                if (code != Code::Success) {
+                    throw std::runtime_error("Could not update dataRetentionPeriod: " + message);
+                }
+            }
+
+            if (requestBody.contains("backendServerPort")) {
+                std::string backendServerPort = std::to_string(requestBody["backendServerPort"].get<int>());
+
+                auto [code, message] = updateInDatabase("backendServerPort", backendServerPort);
+                if (code != Code::Success) {
+                    throw std::runtime_error("Could not update backendServerPort: " + message);
+                }
+            }
+
+            if (requestBody.contains("communicationServerPort")) {
+                std::string communicationServerPort = std::to_string(requestBody["communicationServerPort"].get<int>());
+
+                auto [code, message] = updateInDatabase("communicationServerPort", communicationServerPort);
+                if (code != Code::Success) {
+                    throw std::runtime_error("Could not update communicationServerPort: " + message);
+                }
+            }
+
             // Response
             response.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
             response.setContentType("application/json");
             std::ostream& out = response.send();
-            nlohmann::json responseJson = {{"status", "success"}, {"message", "Device network configuration updated successfully"}};
+            nlohmann::json responseJson = {{"status", "success"}, {"message", "Device configuration updated successfully"}};
             out << responseJson.dump();
         }   
         catch (const std::exception& e) {
@@ -170,7 +214,7 @@ namespace SystemConfiguration {
             std::ostream& out = response.send();
             nlohmann::json errorJson = { {"status", "error"}, {"message", e.what()} };
             out << errorJson.dump();
-            Logger::error("Internal Server Error: {}", e.what());
+            Logger::error("Error occurred while updating configuration: {}", e.what());
         }
         catch (...) {
             response.setStatus(Poco::Net::HTTPResponse::HTTP_INTERNAL_SERVER_ERROR);
@@ -178,109 +222,7 @@ namespace SystemConfiguration {
             std::ostream& out = response.send();
             nlohmann::json errorJson = {{"status", "error"}, {"message", "An unexpected error occurred"}};
             out << errorJson.dump();
-            Logger::error("Unexpected error occurred while updating network configuration");
-        }
-    }
-
-    void update_device_name(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) noexcept {
-        try {
-            Logger::trace("Updating device name in configuration database.");
-
-            // Parse JSON from request body
-            nlohmann::json requestBody;
-            try {
-                requestBody = nlohmann::json::parse(request.stream());
-            } 
-            catch (const nlohmann::json::parse_error& e) {
-                throw std::runtime_error("Invalid JSON: " + std::string(e.what()));
-            }
-
-            // Validate required fields
-            static const std::vector<std::tuple<std::string, Utilities::JSON::FieldDataType, bool>> required_fields {
-                { "deviceName", Utilities::JSON::FieldDataType::String, true }
-            };
-            Utilities::JSON::Validate(required_fields, requestBody);
-
-            std::string deviceNameString = requestBody["deviceName"].get<std::string>();
-
-            auto [code, message] = update("deviceName", deviceNameString);
-            if (code != Code::Success) {
-                throw std::runtime_error("Could not update deviceName: " + message);
-            }
-
-            // Response
-            response.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
-            response.setContentType("application/json");
-            std::ostream& out = response.send();
-            nlohmann::json responseJson = {{"status", "success"}, {"message", "Device Name updated successfully"}};
-            out << responseJson.dump();
-        }   
-        catch (const std::exception& e) {
-            response.setStatus(Poco::Net::HTTPResponse::HTTP_INTERNAL_SERVER_ERROR);
-            response.setContentType("application/json");
-            std::ostream& out = response.send();
-            nlohmann::json errorJson = { {"status", "error"}, {"message", e.what()} };
-            out << errorJson.dump();
-            Logger::error("Internal Server Error: {}", e.what());
-        }
-        catch (...) {
-            response.setStatus(Poco::Net::HTTPResponse::HTTP_INTERNAL_SERVER_ERROR);
-            response.setContentType("application/json");
-            std::ostream& out = response.send();
-            nlohmann::json errorJson = {{"status", "error"}, {"message", "An unexpected error occurred"}};
-            out << errorJson.dump();
-            Logger::error("Unexpected error occurred while updating device name");
-        }
-    }
-
-    void update_data_retention_period(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) noexcept {
-        try {
-            Logger::trace("Updating data retention in configuration database.");
-
-            // Parse JSON from request body
-            nlohmann::json requestBody;
-            try {
-                requestBody = nlohmann::json::parse(request.stream());
-            } 
-            catch (const nlohmann::json::parse_error& e) {
-                throw std::runtime_error("Invalid JSON: " + std::string(e.what()));
-            }
-
-            // Validate required fields
-            static const std::vector<std::tuple<std::string, Utilities::JSON::FieldDataType, bool>> required_fields {
-                { "dataRetentionPeriod", Utilities::JSON::FieldDataType::Integer, true }
-            };
-            Utilities::JSON::Validate(required_fields, requestBody);
-
-            std::string dataRetentionPeriodString = std::to_string(requestBody["dataRetentionPeriod"].get<int>());
-
-            auto [code, message] = update("dataRetentionPeriod", dataRetentionPeriodString);
-            if (code != Code::Success) {
-                throw std::runtime_error("Could not update dataRetentionPeriod: " + message);
-            }
-
-            // Response
-            response.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
-            response.setContentType("application/json");
-            std::ostream& out = response.send();
-            nlohmann::json responseJson = {{"status", "success"}, {"message", "Data retention period updated successfully"}};
-            out << responseJson.dump();
-        }   
-        catch (const std::exception& e) {
-            response.setStatus(Poco::Net::HTTPResponse::HTTP_INTERNAL_SERVER_ERROR);
-            response.setContentType("application/json");
-            std::ostream& out = response.send();
-            nlohmann::json errorJson = { {"status", "error"}, {"message", e.what()} };
-            out << errorJson.dump();
-            Logger::error("Internal Server Error: {}", e.what());
-        }
-        catch (...) {
-            response.setStatus(Poco::Net::HTTPResponse::HTTP_INTERNAL_SERVER_ERROR);
-            response.setContentType("application/json");
-            std::ostream& out = response.send();
-            nlohmann::json errorJson = {{"status", "error"}, {"message", "An unexpected error occurred"}};
-            out << errorJson.dump();
-            Logger::error("Unexpected error occurred while updating data retention period");
+            Logger::error("Unexpected error occurred while updating configuration");
         }
     }
 
