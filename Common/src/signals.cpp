@@ -57,12 +57,7 @@ namespace Signals {
                 int cnt = 0;
                 Definition def;
                 def.ID = query.getColumn(cnt++).getInt();
-                CopyStringToArray(query.getColumn(cnt++).getString(), def.name);
-                CopyStringToArray(query.getColumn(cnt++).getString(), def.description);
-                def.dataType = DataTypeFromInt(query.getColumn(cnt++).getInt());
-                def.isArchived = (query.getColumn(cnt++).getInt() == 1);
                 def.groupID = query.getColumn(cnt++).getInt();
-                
                 nlohmann::json alarms = nlohmann::json::parse(query.getColumn(cnt++).getString());
                 def.alarmLow.enabled = alarms.value("LowEnabled", false);
                 if (def.alarmLow.enabled) {
@@ -72,12 +67,14 @@ namespace Signals {
                 if (def.alarmHigh.enabled) {
                     def.alarmHigh.threshold = alarms.value("HighThreshold", 0.0);
                 }
-
                 nlohmann::json labels = nlohmann::json::parse(query.getColumn(cnt++).getString());
                 CopyStringToArray(labels.value("Unit", ""), def.label.unit);
                 CopyStringToArray(labels.value("LowLabel", ""), def.label.lowLabel);
                 CopyStringToArray(labels.value("HighLabel", ""), def.label.highLabel);
-
+                CopyStringToArray(query.getColumn(cnt++).getString(), def.name);
+                CopyStringToArray(query.getColumn(cnt++).getString(), def.description);
+                def.dataType = DataTypeFromInt(query.getColumn(cnt++).getInt());
+                def.isArchived = (query.getColumn(cnt++).getInt() == 1);
                 definitions.push_back(def);
             }
         }
@@ -88,7 +85,7 @@ namespace Signals {
             Logger::error("std::exception: {}", e.what());
         }
         catch (...) {
-            Logger::error("Unexpected error occurred while reaading AnalogDefinition");
+            Logger::error("Unexpected error occurred while reaading Definition");
         }
         return definitions;
     }

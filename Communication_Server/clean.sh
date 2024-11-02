@@ -1,0 +1,5 @@
+rm -fr "./Build"
+rm "../Build/arm64/Release/Communication_Server"
+rm "../Build/arm64/Debug/Communication_Server"
+rm "../Build/amd64/Release/Communication_Server"
+rm "../Build/amd64/Debug/Communication_Server"

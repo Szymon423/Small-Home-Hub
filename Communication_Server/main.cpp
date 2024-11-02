@@ -3,12 +3,12 @@
 #include <Common/runtime.hpp>
 #include <Common/configuration.hpp>
 #include <Common/log.hpp>
-#include <future>
 #include "backend.hpp"
+#include <future>
 
 int main() {
     // Initialize logger
-    Logger::init("/Small-Home-Hub/logs/Backend_Server.log", "Backend_Server");
+    Logger::init("/Small-Home-Hub/logs/Communication_Server.log", "Communication_Server");
     Logger::info("Starting");
 
     // Register handler signals 

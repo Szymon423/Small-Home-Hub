@@ -1,0 +1,5 @@
+rm -fr "./Build"
+rm "../Build/arm64/Release/SHH"
+rm "../Build/arm64/Debug/SHH"
+rm "../Build/amd64/Release/SHH"
+rm "../Build/amd64/Debug/SHH"

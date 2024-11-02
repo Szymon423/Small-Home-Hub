@@ -1,5 +1,4 @@
 #include "events.hpp"
-#include "utilities.hpp"
 #include <Common/log.hpp>
 #include <Common/events.hpp>
 #include <Common/utilities.hpp>
@@ -47,11 +46,11 @@ namespace EventsHandling {
             }
 
             // Validate required fields
-            static const std::vector<std::tuple<std::string, FieldDataType, bool>> required_fields {
-                { "EventID", FieldDataType::Integer, true },
-                { "UserID", FieldDataType::Integer, true }
+            static const std::vector<std::tuple<std::string, Utilities::JSON::FieldDataType, bool>> required_fields {
+                { "EventID", Utilities::JSON::FieldDataType::Integer, true },
+                { "UserID", Utilities::JSON::FieldDataType::Integer, true }
             };
-            validate_fields(required_fields, requestBody);
+            Utilities::JSON::Validate(required_fields, requestBody);
 
             std::uint16_t eventID = requestBody["EventID"];
             std::uint16_t userID = requestBody["UserID"];

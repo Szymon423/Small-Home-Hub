@@ -1,9 +1,9 @@
 #include "signal_definitions.hpp"
-#include "utilities.hpp"
 #include <Common/log.hpp>
 #include <Common/database.hpp>
 #include <Common/groups.hpp>
 #include <Common/signals.hpp>
+#include <Common/utilities.hpp>
 #include <nlohmann/json.hpp>
 #include <SQLiteCpp/SQLiteCpp.h>
 #include <exception>
@@ -35,7 +35,6 @@ namespace SignalDefinitions {
         }
     }
 
-    // TODO: this function must be adjusted to used member variables
     void add_signal(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) noexcept {
         try {
             Logger::trace("Adding new signal definition to DB.");
@@ -50,59 +49,30 @@ namespace SignalDefinitions {
             }
 
             // Validate required fields
-            static const std::vector<std::tuple<std::string, FieldDataType, bool>> required_fields {
-                { "IsArchived", FieldDataType::Boolean, true },
-                { "GroupID", FieldDataType::Integer, true },
-                { "SourceType", FieldDataType::Integer, true },
-                { "SourceID", FieldDataType::Integer, true },
-                { "AlarmLowEnabled", FieldDataType::Boolean, true },
-                { "AlarmHighEnabled", FieldDataType::Boolean, true },
-                { "AlarmLowThreshold", FieldDataType::Float, true },
-                { "AlarmHighThreshold", FieldDataType::Float, true },
-                { "WarningLowEnabled", FieldDataType::Boolean, true },
-                { "WarningHighEnabled", FieldDataType::Boolean, true },
-                { "WarningLowThreshold", FieldDataType::Float, true },
-                { "WarningHighThreshold", FieldDataType::Float, true },
-                { "Unit", FieldDataType::String, true },
-                { "Name", FieldDataType::String, true },
-                { "Description", FieldDataType::String, true }
+            static const std::vector<std::tuple<std::string, Utilities::JSON::FieldDataType, bool>> required_fields {
+                { "IsArchived", Utilities::JSON::FieldDataType::Boolean, true },
+                { "GroupID", Utilities::JSON::FieldDataType::Integer, true },
+                { "DataType", Utilities::JSON::FieldDataType::Integer, true },
+                { "Alarms", Utilities::JSON::FieldDataType::String, true },
+                { "Labels", Utilities::JSON::FieldDataType::String, true },
+                { "Name", Utilities::JSON::FieldDataType::String, true },
+                { "Description", Utilities::JSON::FieldDataType::String, true }
             };
-            validate_fields(required_fields, requestBody);
-
-            nlohmann::json alarms = {
-                {"AlarmLowEnabled", requestBody["AlarmLowEnabled"].get<bool>()},
-                {"AlarmHighEnabled", requestBody["AlarmHighEnabled"].get<bool>()},
-                {"AlarmLowThreshold", requestBody["AlarmLowThreshold"].get<double>()},
-                {"AlarmHighThreshold", requestBody["AlarmHighThreshold"].get<double>()},
-            };
-
-            nlohmann::json warnings = {
-                {"WarningLowEnabled", requestBody["WarningLowEnabled"].get<bool>()},
-                {"WarningHighEnabled", requestBody["WarningHighEnabled"].get<bool>()},
-                {"WarningLowThreshold", requestBody["WarningLowThreshold"].get<double>()},
-                {"WarningHighThreshold", requestBody["WarningHighThreshold"].get<double>()},
-            };
-
-            nlohmann::json labels = {
-                {"Unit", requestBody["Unit"].get<std::string>()}
-            };
+            Utilities::JSON::Validate(required_fields, requestBody);
 
             // Lock mutex before database operations
             std::lock_guard<std::mutex> lock(ConfigDB::GetMutex());
 
             SQLite::Statement query(*ConfigDB::Get(), 
-                "INSERT INTO Signals (Name, Description, DataType, IsArchived, GroupID, SourceType, SourceID, Alarms, Warnings, Labels) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                "INSERT INTO Signals (Name, Description, DataType, IsArchived, GroupID, Alarms, Labels) VALUES (?, ?, ?, ?, ?, ?, ?)");
             
             query.bind(1, requestBody["Name"].get<std::string>());
             query.bind(2, requestBody["Description"].get<std::string>());
-            query.bind(3, 0);
+            query.bind(3, requestBody["Description"].get<int>());
             query.bind(4, static_cast<int>(requestBody["IsArchived"].get<bool>()));
             query.bind(5, requestBody["GroupID"].get<int>());
-            query.bind(6, requestBody["SourceType"].get<int>());
-            query.bind(7, requestBody["SourceID"].get<int>());
-            query.bind(8, alarms.dump());
-            query.bind(9, warnings.dump());
-            query.bind(10, labels.dump());
+            query.bind(6, requestBody["Alarms"].dump());
+            query.bind(7, requestBody["Labels"].dump());
 
             try {
                 query.exec();
@@ -114,7 +84,7 @@ namespace SignalDefinitions {
             response.setStatus(Poco::Net::HTTPResponse::HTTP_CREATED);
             response.setContentType("application/json");
             std::ostream& out = response.send();
-            nlohmann::json responseJson = {{"status", "success"}, {"message", "Analog signal added successfully"}};
+            nlohmann::json responseJson = {{"status", "success"}, {"message", "Signal added successfully"}};
             out << responseJson.dump();
         }
         catch (const std::exception& e) {
@@ -123,7 +93,7 @@ namespace SignalDefinitions {
             std::ostream& out = response.send();
             nlohmann::json errorJson = {{"status", "error"}, {"message", e.what()}};
             out << errorJson.dump();
-            Logger::error("Error adding analog signal: {}", e.what());
+            Logger::error("Error adding signal: {}", e.what());
         }
         catch (...) {
             response.setStatus(Poco::Net::HTTPResponse::HTTP_INTERNAL_SERVER_ERROR);
@@ -131,11 +101,10 @@ namespace SignalDefinitions {
             std::ostream& out = response.send();
             nlohmann::json errorJson = {{"status", "error"}, {"message", "An unexpected error occurred"}};
             out << errorJson.dump();
-            Logger::error("Unexpected error occurred while adding analog signal definitions");
+            Logger::error("Unexpected error occurred while adding signal definition");
         }
     }
 
-    // TODO: this function must be adjusted to used member variables
     void update_signal(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) noexcept {
         try {
             Logger::trace("Updating analog signal definition in DB.");
@@ -150,43 +119,17 @@ namespace SignalDefinitions {
             }
 
             // Validate required fields
-            static const std::vector<std::tuple<std::string, FieldDataType, bool>> required_fields {
-                { "AnalogDefinitionID", FieldDataType::Integer, true },
-                { "IsArchived", FieldDataType::Boolean, false },
-                { "GroupID", FieldDataType::Integer, false },
-                { "SourceType", FieldDataType::Integer, false },
-                { "SourceID", FieldDataType::Integer, false },
-                { "AlarmLowEnabled", FieldDataType::Boolean, false },
-                { "AlarmHighEnabled", FieldDataType::Boolean, false },
-                { "AlarmLowThreshold", FieldDataType::Float, false },
-                { "AlarmHighThreshold", FieldDataType::Float, false },
-                { "WarningLowEnabled", FieldDataType::Boolean, false },
-                { "WarningHighEnabled", FieldDataType::Boolean, false },
-                { "WarningLowThreshold", FieldDataType::Float, false },
-                { "WarningHighThreshold", FieldDataType::Float, false },
-                { "Unit", FieldDataType::String, false },
-                { "Name", FieldDataType::String, false },
-                { "Description", FieldDataType::String, false }
+            static const std::vector<std::tuple<std::string, Utilities::JSON::FieldDataType, bool>> required_fields {
+                { "ID", Utilities::JSON::FieldDataType::Integer, true },
+                { "IsArchived", Utilities::JSON::FieldDataType::Boolean, false },
+                { "GroupID", Utilities::JSON::FieldDataType::Integer, false },
+                { "DataType", Utilities::JSON::FieldDataType::Integer, false },
+                { "Alarms", Utilities::JSON::FieldDataType::String, false },
+                { "Labels", Utilities::JSON::FieldDataType::String, false },
+                { "Name", Utilities::JSON::FieldDataType::String, false },
+                { "Description", Utilities::JSON::FieldDataType::String, false }
             };
-            validate_fields(required_fields, requestBody);
-
-            nlohmann::json alarms = {
-                {"AlarmLowEnabled", requestBody.value("AlarmLowEnabled", false)},
-                {"AlarmHighEnabled", requestBody.value("AlarmHighEnabled", false)},
-                {"AlarmLowThreshold", requestBody.value("AlarmLowThreshold", 0.0)},
-                {"AlarmHighThreshold", requestBody.value("AlarmHighThreshold", 0.0)}
-            };
-
-            nlohmann::json warnings = {
-                {"WarningLowEnabled", requestBody.value("WarningLowEnabled", false)},
-                {"WarningHighEnabled", requestBody.value("WarningHighEnabled", false)},
-                {"WarningLowThreshold", requestBody.value("WarningLowThreshold", 0.0)},
-                {"WarningHighThreshold", requestBody.value("WarningHighThreshold", 0.0)}
-            };
-
-            nlohmann::json labels = {
-                {"Unit", requestBody.value("Unit", "")}
-            };
+            Utilities::JSON::Validate(required_fields, requestBody);
 
             // Lock mutex before database operations
             std::lock_guard<std::mutex> lock(ConfigDB::GetMutex());
@@ -211,20 +154,10 @@ namespace SignalDefinitions {
                 updateFields.push_back("GroupID = ?");
                 bindValues.push_back(std::to_string(requestBody["GroupID"].get<int>()));
             }
-            if (requestBody.contains("SourceType")) {
-                updateFields.push_back("SourceType = ?");
-                bindValues.push_back(std::to_string(requestBody["SourceType"].get<int>()));
-            }
-            if (requestBody.contains("SourceID")) {
-                updateFields.push_back("SourceID = ?");
-                bindValues.push_back(std::to_string(requestBody["SourceID"].get<int>()));
-            }
             updateFields.push_back("Alarms = ?");
-            bindValues.push_back(alarms.dump());
-            updateFields.push_back("Warnings = ?");
-            bindValues.push_back(warnings.dump());
+            bindValues.push_back(requestBody["Alarms"].dump());
             updateFields.push_back("Labels = ?");
-            bindValues.push_back(labels.dump());
+            bindValues.push_back(requestBody["Labels"].dump());
 
             for (size_t i = 0; i < updateFields.size(); ++i) {
                 updateQuery += updateFields[i];
@@ -233,7 +166,7 @@ namespace SignalDefinitions {
                 }
             }
 
-            updateQuery += " WHERE SignalID = ?";
+            updateQuery += " WHERE ID = ?";
 
             SQLite::Statement query(*ConfigDB::Get(), updateQuery);
             
@@ -241,7 +174,7 @@ namespace SignalDefinitions {
             for (const auto& value : bindValues) {
                 query.bind(bindIndex++, value);
             }
-            query.bind(bindIndex, requestBody["AnalogDefinitionID"].get<int>());
+            query.bind(bindIndex, requestBody["ID"].get<int>());
 
             try {
                 query.exec();
@@ -251,13 +184,13 @@ namespace SignalDefinitions {
             }
 
             if (query.getChanges() == 0) {
-                throw std::runtime_error("No record found with the given AnalogDefinitionID");
+                throw std::runtime_error("No record found with the given ID");
             }
 
             response.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
             response.setContentType("application/json");
             std::ostream& out = response.send();
-            nlohmann::json responseJson = {{"status", "success"}, {"message", "Analog signal definition updated successfully"}};
+            nlohmann::json responseJson = {{"status", "success"}, {"message", "Signal definition updated successfully"}};
             out << responseJson.dump();
         }
         catch (const std::exception& e) {
@@ -266,7 +199,7 @@ namespace SignalDefinitions {
             std::ostream& out = response.send();
             nlohmann::json errorJson = {{"status", "error"}, {"message", e.what()}};
             out << errorJson.dump();
-            Logger::error("Error updating analog signal: {}", e.what());
+            Logger::error("Error updating signal: {}", e.what());
         }
         catch (...) {
             response.setStatus(Poco::Net::HTTPResponse::HTTP_INTERNAL_SERVER_ERROR);
@@ -274,11 +207,10 @@ namespace SignalDefinitions {
             std::ostream& out = response.send();
             nlohmann::json errorJson = {{"status", "error"}, {"message", "An unexpected error occurred"}};
             out << errorJson.dump();
-            Logger::error("Unexpected error occurred while updating analog signal definitions");
+            Logger::error("Unexpected error occurred while updating signal definition");
         }
     }
 
-    // TODO: this function must be adjusted to used member variables
     void delete_signal(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) noexcept {
         try {
             Logger::trace("Deleting analog signal definition from DB.");
@@ -293,16 +225,16 @@ namespace SignalDefinitions {
             }
 
             // Validate required fields
-            static const std::vector<std::tuple<std::string, FieldDataType, bool>> required_fields {
-                { "AnalogDefinitionID", FieldDataType::Integer, true }
+            static const std::vector<std::tuple<std::string, Utilities::JSON::FieldDataType, bool>> required_fields {
+                { "ID", Utilities::JSON::FieldDataType::Integer, true }
             };
-            validate_fields(required_fields, requestBody);
+            Utilities::JSON::Validate(required_fields, requestBody);
 
             std::lock_guard<std::mutex> lock(ConfigDB::GetMutex());
 
-            SQLite::Statement query(*ConfigDB::Get(), "DELETE FROM Signals WHERE SignalID = ?");
+            SQLite::Statement query(*ConfigDB::Get(), "DELETE FROM Signals WHERE ID = ?");
             
-            query.bind(1, requestBody["AnalogDefinitionID"].get<int>());
+            query.bind(1, requestBody["ID"].get<int>());
 
             try {
                 query.exec();
@@ -312,13 +244,13 @@ namespace SignalDefinitions {
             }
 
             if (query.getChanges() == 0) {
-                throw std::runtime_error("No record found with the given AnalogDefinitionID");
+                throw std::runtime_error("No record found with the given ID");
             }
 
             response.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
             response.setContentType("application/json");
             std::ostream& out = response.send();
-            nlohmann::json responseJson = {{"status", "success"}, {"message", "Analog signal definition deleted successfully"}};
+            nlohmann::json responseJson = {{"status", "success"}, {"message", "Signal definition deleted successfully"}};
             out << responseJson.dump();
         }
         catch (const std::exception& e) {
@@ -327,7 +259,7 @@ namespace SignalDefinitions {
             std::ostream& out = response.send();
             nlohmann::json errorJson = {{"status", "error"}, {"message", e.what()}};
             out << errorJson.dump();
-            Logger::error("Error deleting analog signal definition: {}", e.what());
+            Logger::error("Error deleting signal definition: {}", e.what());
         }
         catch (...) {
             response.setStatus(Poco::Net::HTTPResponse::HTTP_INTERNAL_SERVER_ERROR);
@@ -335,7 +267,7 @@ namespace SignalDefinitions {
             std::ostream& out = response.send();
             nlohmann::json errorJson = {{"status", "error"}, {"message", "An unexpected error occurred"}};
             out << errorJson.dump();
-            Logger::error("Unexpected error occurred while deleting analog signal definitions");
+            Logger::error("Unexpected error occurred while deleting signal definitions");
         }
     }
 }
@@ -380,11 +312,11 @@ namespace GroupDefinitions {
             }
 
             // Validate required fields
-            static const std::vector<std::tuple<std::string, FieldDataType, bool>> required_fields {
-                { "Name", FieldDataType::String, true },
-                { "Description", FieldDataType::String, true }
+            static const std::vector<std::tuple<std::string, Utilities::JSON::FieldDataType, bool>> required_fields {
+                { "Name", Utilities::JSON::FieldDataType::String, true },
+                { "Description", Utilities::JSON::FieldDataType::String, true }
             };
-            validate_fields(required_fields, requestBody);
+            Utilities::JSON::Validate(required_fields, requestBody);
 
             std::lock_guard<std::mutex> lock(ConfigDB::GetMutex());
 
@@ -431,12 +363,12 @@ namespace GroupDefinitions {
             }
 
             // Validate required fields
-            static const std::vector<std::tuple<std::string, FieldDataType, bool>> required_fields {
-                { "GroupID", FieldDataType::Integer, true },
-                { "Name", FieldDataType::String, true },
-                { "Description", FieldDataType::String, true }
+            static const std::vector<std::tuple<std::string, Utilities::JSON::FieldDataType, bool>> required_fields {
+                { "GroupID", Utilities::JSON::FieldDataType::Integer, true },
+                { "Name", Utilities::JSON::FieldDataType::String, true },
+                { "Description", Utilities::JSON::FieldDataType::String, true }
             };
-            validate_fields(required_fields, requestBody);
+            Utilities::JSON::Validate(required_fields, requestBody);
 
             std::lock_guard<std::mutex> lock(ConfigDB::GetMutex());
 
@@ -515,10 +447,10 @@ namespace GroupDefinitions {
             }
 
             // Validate required fields
-            static const std::vector<std::tuple<std::string, FieldDataType, bool>> required_fields {
-                { "GroupID", FieldDataType::Integer, true }
+            static const std::vector<std::tuple<std::string, Utilities::JSON::FieldDataType, bool>> required_fields {
+                { "GroupID", Utilities::JSON::FieldDataType::Integer, true }
             };
-            validate_fields(required_fields, requestBody);
+            Utilities::JSON::Validate(required_fields, requestBody);
 
             // Lock mutex before database operations
             std::lock_guard<std::mutex> lock(ConfigDB::GetMutex());

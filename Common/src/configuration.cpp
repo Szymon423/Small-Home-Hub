@@ -6,7 +6,7 @@
 
 Configuration::Config Configuration::config{
     .deviceIp{ "127.0.0.1" },
-    .deviceNetworkMask{ "255.255.255.0" },
+    .deviceSubnetMask{ "255.255.255.0" },
     .deviceName{ "Test home" },
     .dataRetentionPeriod{ 30 },
     .backendServerPort{ 9990 },
@@ -26,8 +26,8 @@ void Configuration::Load() {
             if (key == "deviceIp") {
                 config.deviceIp = value;
             } 
-            else if (key == "deviceNetworkMask") {
-                config.deviceNetworkMask = value;
+            else if (key == "deviceSubnetMask") {
+                config.deviceSubnetMask = value;
             } 
             else if (key == "deviceName") {
                 config.deviceName = value;

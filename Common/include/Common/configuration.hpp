@@ -8,7 +8,7 @@ public:
     /// @brief Structure with config itself
     struct Config {
         std::string deviceIp;                   // String with device ip
-        std::string deviceNetworkMask;          // String with ip-mask
+        std::string deviceSubnetMask;          // String with ip-mask
         std::string deviceName;                 // String with device name
         std::uint16_t dataRetentionPeriod;      // Number of days after which archived data will be deleted
         std::uint16_t backendServerPort;        // Port number which is associated with backend server

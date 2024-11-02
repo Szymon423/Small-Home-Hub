@@ -18,7 +18,6 @@ std::map<std::pair<std::string, std::string>, MyRequestHandler::RouteHandler> My
     {{"GET",  "/api/configuration/export"}, std::bind(&SystemConfiguration::export_db, std::placeholders::_1, std::placeholders::_2)},
     {{"POST", "/api/configuration/update_network"}, std::bind(&SystemConfiguration::update_network, std::placeholders::_1, std::placeholders::_2)},
     {{"POST", "/api/configuration/update_device_name"}, std::bind(&SystemConfiguration::update_device_name, std::placeholders::_1, std::placeholders::_2)},
-    {{"POST", "/api/configuration/update_modbus_config"}, std::bind(&SystemConfiguration::update_modbus_config, std::placeholders::_1, std::placeholders::_2)},
     {{"POST", "/api/configuration/update_data_retention_period"}, std::bind(&SystemConfiguration::update_data_retention_period, std::placeholders::_1, std::placeholders::_2)},
     
     {{"GET",  "/api/signals/groups/get"}, std::bind(&GroupDefinitions::get_all, std::placeholders::_1, std::placeholders::_2)},
@@ -93,7 +92,7 @@ int MyServerApp::run() {
 
 int MyServerApp::main(const std::vector<std::string>& args) {
     auto config = Configuration::Get();
-    Poco::Net::HTTPServer s(new MyRequestHandlerFactory, config.backend_server_port);
+    Poco::Net::HTTPServer s(new MyRequestHandlerFactory, config.backendServerPort);
     s.start();
     while (Runtime::Run()) {
         Poco::Thread::sleep(100);

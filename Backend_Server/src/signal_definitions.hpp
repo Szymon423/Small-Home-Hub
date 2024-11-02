@@ -4,47 +4,24 @@
 #include <Poco/Net/HTTPServerRequest.h>
 #include <Poco/Net/HTTPServerResponse.h>
 
-/// @brief Namespace for functions interacting with configuration database with Analog_Signals_Definitions table
-namespace AnalogSignalDefinitions {
-    /// @brief Retrieves all Analog_Signals_Definitions
+/// @brief Namespace for functions interacting with configuration database with SignalDefinitions table
+namespace SignalDefinitions {
+    /// @brief Retrieves all SignalDefinitions
     /// @param request HTTP request
     /// @param response HTTP response
     void get_all(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) noexcept;
 
-    /// @brief Adds mew record in Analog_Signals_Definitions table in database
+    /// @brief Adds mew record in SignalDefinitions table in database
     /// @param request HTTP request
     /// @param response HTTP response
     void add_signal(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) noexcept;
 
-    /// @brief Updates record in Analog_Signals_Definitions table in database
+    /// @brief Updates record in SignalDefinitions table in database
     /// @param request HTTP request
     /// @param response HTTP response
     void update_signal(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) noexcept;
 
-    /// @brief Deletes record in Analog_Signals_Definitions table in database
-    /// @param request HTTP request
-    /// @param response HTTP response
-    void delete_signal(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) noexcept;
-}
-
-/// @brief Namespace for functions interacting with configuration database with Binary_Signals_Definitions table
-namespace BinarySignalDefinitions {
-    /// @brief Retrieves all Binary_Signals_Definitions
-    /// @param request HTTP request
-    /// @param response HTTP response
-    void get_all(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) noexcept;
-
-    /// @brief Adds mew record in Binary_Signals_Definitions table in database
-    /// @param request HTTP request
-    /// @param response HTTP response
-    void add_signal(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) noexcept;
-
-    /// @brief Updates record in Binary_Signals_Definitions table in database
-    /// @param request HTTP request
-    /// @param response HTTP response
-    void update_signal(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) noexcept;
-
-    /// @brief Deletes record in Binary_Signals_Definitions table in database
+    /// @brief Deletes record in SignalDefinitions table in database
     /// @param request HTTP request
     /// @param response HTTP response
     void delete_signal(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) noexcept;

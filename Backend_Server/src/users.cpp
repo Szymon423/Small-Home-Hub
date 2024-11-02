@@ -1,5 +1,5 @@
 #include "users.hpp"
-#include "utilities.hpp"
+#include <Common/utilities.hpp>
 #include <nlohmann/json.hpp>
 #include <Common/log.hpp>
 #include <Common/users.hpp>
@@ -53,14 +53,14 @@ namespace Users {
             nlohmann::json requestBody = nlohmann::json::parse(request.stream());
 
             // Validate required fields
-            static const std::vector<std::tuple<std::string, FieldDataType, bool>> required_fields {
-                { "Name", FieldDataType::String, true },
-                { "Surname", FieldDataType::String, true },
-                { "Login", FieldDataType::String, true },
-                { "Password", FieldDataType::String, false },
-                { "Privileges", FieldDataType::Integer, false }
+            static const std::vector<std::tuple<std::string, Utilities::JSON::FieldDataType, bool>> required_fields {
+                { "Name", Utilities::JSON::FieldDataType::String, true },
+                { "Surname", Utilities::JSON::FieldDataType::String, true },
+                { "Login", Utilities::JSON::FieldDataType::String, true },
+                { "Password", Utilities::JSON::FieldDataType::String, false },
+                { "Privileges", Utilities::JSON::FieldDataType::Integer, false }
             };
-            validate_fields(required_fields, requestBody);
+            Utilities::JSON::Validate(required_fields, requestBody);
 
             // Lock mutex before database operations
             std::lock_guard<std::mutex> lock(ConfigDB::GetMutex());
@@ -116,15 +116,15 @@ namespace Users {
             }
 
             // Validate required fields
-            static const std::vector<std::tuple<std::string, FieldDataType, bool>> required_fields {
-                { "UserID", FieldDataType::Integer, true },
-                { "Name", FieldDataType::String, false },
-                { "Surname", FieldDataType::String, false },
-                { "Login", FieldDataType::String, false },
-                { "Password", FieldDataType::String, false },
-                { "Privileges", FieldDataType::Integer, false }
+            static const std::vector<std::tuple<std::string, Utilities::JSON::FieldDataType, bool>> required_fields {
+                { "UserID", Utilities::JSON::FieldDataType::Integer, true },
+                { "Name", Utilities::JSON::FieldDataType::String, false },
+                { "Surname", Utilities::JSON::FieldDataType::String, false },
+                { "Login", Utilities::JSON::FieldDataType::String, false },
+                { "Password", Utilities::JSON::FieldDataType::String, false },
+                { "Privileges", Utilities::JSON::FieldDataType::Integer, false }
             };
-            validate_fields(required_fields, requestBody);
+            Utilities::JSON::Validate(required_fields, requestBody);
 
             std::string updateQuery = "UPDATE Users SET ";
             std::vector<std::string> updateFields;
@@ -226,10 +226,10 @@ namespace Users {
             }
 
             // Validate required fields
-            static const std::vector<std::tuple<std::string, FieldDataType, bool>> required_fields {
-                { "UserID", FieldDataType::Integer, true }
+            static const std::vector<std::tuple<std::string, Utilities::JSON::FieldDataType, bool>> required_fields {
+                { "UserID", Utilities::JSON::FieldDataType::Integer, true }
             };
-            validate_fields(required_fields, requestBody);
+            Utilities::JSON::Validate(required_fields, requestBody);
 
             // Lock mutex before database operations
             std::lock_guard<std::mutex> lock(ConfigDB::GetMutex());

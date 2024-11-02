@@ -36,7 +36,7 @@ namespace SharedMemory {
         Header header;
 
         /// @brief Definitions of signals
-        Signals::Definition Definitions[SystemConstants::MaxSignalsNumber];
+        Signals::Definition definitions[SystemConstants::MaxSignalsNumber];
         
         /// @brief Current analog signals values
         Signals::Value currentValues[SystemConstants::MaxSignalsNumber];

@@ -1,6 +1,6 @@
 #include "system_configuration.hpp"
-#include "utilities.hpp"
 #include <Common/database.hpp>
+#include <Common/utilities.hpp>
 #include <Common/log.hpp>
 #include <SQLiteCpp/SQLiteCpp.h>
 #include <nlohmann/json.hpp>
@@ -124,34 +124,34 @@ namespace SystemConfiguration {
             }
 
             // Validate required fields
-            static const std::vector<std::tuple<std::string, FieldDataType, bool>> required_fields {
-                { "device_ip", FieldDataType::String, true },
-                { "subnet_mask", FieldDataType::String, true }
+            static const std::vector<std::tuple<std::string, Utilities::JSON::FieldDataType, bool>> required_fields {
+                { "deviceIp", Utilities::JSON::FieldDataType::String, true },
+                { "deviceSubnetMask", Utilities::JSON::FieldDataType::String, true }
             };
-            validate_fields(required_fields, requestBody);
+            Utilities::JSON::Validate(required_fields, requestBody);
 
-            std::string ip_string = requestBody["device_ip"].get<std::string>();
-            std::string subnet_mask_string = requestBody["subnet_mask"].get<std::string>();
+            std::string deviceIp = requestBody["deviceIp"].get<std::string>();
+            std::string deviceSubnetMask = requestBody["deviceSubnetMask"].get<std::string>();
 
             // RegEx for IPv4 validation
             const std::regex ipPattern(R"((\b(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\b\.){3}(\b(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\b))");
 
-            if (!std::regex_match(ip_string, ipPattern)) {
+            if (!std::regex_match(deviceIp, ipPattern)) {
                 throw std::runtime_error("Provided ip is not valid.");
             }
 
-            if (!std::regex_match(subnet_mask_string, ipPattern)) {
+            if (!std::regex_match(deviceSubnetMask, ipPattern)) {
                 throw std::runtime_error("Provided subnet mask is not valid.");
             }
 
             {
-                auto [code, message] = update("device_ip", ip_string);
+                auto [code, message] = update("device_ip", deviceIp);
                 if (code != Code::Success) {
                     throw std::runtime_error("Could not update device_ip: " + message);
                 }
             }
             {
-                auto [code, message] = update("subnet_mask", subnet_mask_string);
+                auto [code, message] = update("subnet_mask", deviceSubnetMask);
                 if (code != Code::Success) {
                     throw std::runtime_error("Could not update subnet_mask: " + message);
                 }
@@ -161,7 +161,7 @@ namespace SystemConfiguration {
             response.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
             response.setContentType("application/json");
             std::ostream& out = response.send();
-            nlohmann::json responseJson = {{"status", "success"}, {"message", "Device IP updated successfully"}};
+            nlohmann::json responseJson = {{"status", "success"}, {"message", "Device network configuration updated successfully"}};
             out << responseJson.dump();
         }   
         catch (const std::exception& e) {
@@ -178,7 +178,7 @@ namespace SystemConfiguration {
             std::ostream& out = response.send();
             nlohmann::json errorJson = {{"status", "error"}, {"message", "An unexpected error occurred"}};
             out << errorJson.dump();
-            Logger::error("Unexpected error occurred while updating IP");
+            Logger::error("Unexpected error occurred while updating network configuration");
         }
     }
 
@@ -196,16 +196,16 @@ namespace SystemConfiguration {
             }
 
             // Validate required fields
-            static const std::vector<std::tuple<std::string, FieldDataType, bool>> required_fields {
-                { "device_name", FieldDataType::String, true }
+            static const std::vector<std::tuple<std::string, Utilities::JSON::FieldDataType, bool>> required_fields {
+                { "deviceName", Utilities::JSON::FieldDataType::String, true }
             };
-            validate_fields(required_fields, requestBody);
+            Utilities::JSON::Validate(required_fields, requestBody);
 
-            std::string device_name_string = requestBody["device_name"].get<std::string>();
+            std::string deviceNameString = requestBody["deviceName"].get<std::string>();
 
-            auto [code, message] = update("device_name", device_name_string);
+            auto [code, message] = update("deviceName", deviceNameString);
             if (code != Code::Success) {
-                throw std::runtime_error("Could not update device_name: " + message);
+                throw std::runtime_error("Could not update deviceName: " + message);
             }
 
             // Response
@@ -213,69 +213,6 @@ namespace SystemConfiguration {
             response.setContentType("application/json");
             std::ostream& out = response.send();
             nlohmann::json responseJson = {{"status", "success"}, {"message", "Device Name updated successfully"}};
-            out << responseJson.dump();
-        }   
-        catch (const std::exception& e) {
-            response.setStatus(Poco::Net::HTTPResponse::HTTP_INTERNAL_SERVER_ERROR);
-            response.setContentType("application/json");
-            std::ostream& out = response.send();
-            nlohmann::json errorJson = { {"status", "error"}, {"message", e.what()} };
-            out << errorJson.dump();
-            Logger::error("Internal Server Error: {}", e.what());
-        }
-        catch (...) {
-            response.setStatus(Poco::Net::HTTPResponse::HTTP_INTERNAL_SERVER_ERROR);
-            response.setContentType("application/json");
-            std::ostream& out = response.send();
-            nlohmann::json errorJson = {{"status", "error"}, {"message", "An unexpected error occurred"}};
-            out << errorJson.dump();
-            Logger::error("Unexpected error occurred while updating device name");
-        }
-    }
-
-    void update_modbus_config(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) noexcept {
-        try {
-            Logger::trace("Updating modbus server configuration in configuration database.");
-
-            // Parse JSON from request body
-            nlohmann::json requestBody;
-            try {
-                requestBody = nlohmann::json::parse(request.stream());
-            } 
-            catch (const nlohmann::json::parse_error& e) {
-                throw std::runtime_error("Invalid JSON: " + std::string(e.what()));
-            }
-
-            // Validate required fields
-            static const std::vector<std::tuple<std::string, FieldDataType, bool>> required_fields {
-                { "modbus_server_enabled", FieldDataType::Boolean, true },
-                { "modbus_server_port", FieldDataType::Integer, true }
-            };
-            validate_fields(required_fields, requestBody);
-
-            std::string modbus_server_enabled_string = requestBody["modbus_server_enabled"].get<bool>() ? "true" : "false";
-            std::string modbus_server_port_string = std::to_string(requestBody["modbus_server_port"].get<int>());
-            // TODO: need to validate those items first, and only then update db
-
-            {
-                auto [code, message] = update("modbus_server_enabled", modbus_server_enabled_string);
-                if (code != Code::Success) {
-                    throw std::runtime_error("Could not update modbus server enabled: " + message);
-                }
-            }
-            
-            {
-                auto [code, message] = update("modbus_server_port", modbus_server_port_string);
-                if (code != Code::Success) {
-                    throw std::runtime_error("Could not update modbus server port: " + message);
-                }
-            }
-
-            // Response
-            response.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
-            response.setContentType("application/json");
-            std::ostream& out = response.send();
-            nlohmann::json responseJson = {{"status", "success"}, {"message", "Modbus configuration updated successfully"}};
             out << responseJson.dump();
         }   
         catch (const std::exception& e) {
@@ -310,16 +247,16 @@ namespace SystemConfiguration {
             }
 
             // Validate required fields
-            static const std::vector<std::tuple<std::string, FieldDataType, bool>> required_fields {
-                { "data_retention_period", FieldDataType::Integer, true }
+            static const std::vector<std::tuple<std::string, Utilities::JSON::FieldDataType, bool>> required_fields {
+                { "dataRetentionPeriod", Utilities::JSON::FieldDataType::Integer, true }
             };
-            validate_fields(required_fields, requestBody);
+            Utilities::JSON::Validate(required_fields, requestBody);
 
-            std::string data_retention_period_string = std::to_string(requestBody["data_retention_period"].get<int>());
+            std::string dataRetentionPeriodString = std::to_string(requestBody["dataRetentionPeriod"].get<int>());
 
-            auto [code, message] = update("data_retention_period", data_retention_period_string);
+            auto [code, message] = update("dataRetentionPeriod", dataRetentionPeriodString);
             if (code != Code::Success) {
-                throw std::runtime_error("Could not update data_retention_period: " + message);
+                throw std::runtime_error("Could not update dataRetentionPeriod: " + message);
             }
 
             // Response
@@ -343,7 +280,7 @@ namespace SystemConfiguration {
             std::ostream& out = response.send();
             nlohmann::json errorJson = {{"status", "error"}, {"message", "An unexpected error occurred"}};
             out << errorJson.dump();
-            Logger::error("Unexpected error occurred while updating device name");
+            Logger::error("Unexpected error occurred while updating data retention period");
         }
     }
 

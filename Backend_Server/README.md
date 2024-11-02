@@ -1,2 +1,1 @@
-# Oprogramowanie serwera backendowego
-
+# Software for website backend server

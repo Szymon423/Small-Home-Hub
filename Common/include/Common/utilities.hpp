@@ -2,6 +2,8 @@
 
 #include <chrono>
 #include <string>
+#include <vector>
+#include <nlohmann/json.hpp>
 
 namespace Utilities {
     namespace Time {
@@ -35,5 +37,22 @@ namespace Utilities {
             str.copy(arr, copySize);
             arr[copySize] = '\0';
         }
+    }
+
+    namespace JSON {
+        /// @brief Helping enum with data types for JSON fields
+        enum class FieldDataType : std::uint8_t {
+            String,
+            Integer,
+            Float,
+            Boolean,
+            Object,
+            Array
+        };
+
+        /// @brief Function to check if all fields are inside of JSON with proper datatype, bool (when true) defines that item is required
+        /// @param required_fields fields to examine as { "test", FieldDataType::String, true } - test must be string and it is required
+        /// @param j json to examine
+        void Validate(const std::vector<std::tuple<std::string,FieldDataType, bool>>& required_fields, const nlohmann::json& j);
     }
 }

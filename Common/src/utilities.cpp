@@ -47,4 +47,54 @@ namespace Utilities {
             return std::chrono::system_clock::from_time_t(timeT);
         }
     }
+
+    namespace JSON {
+        void Validate(const std::vector<std::tuple<std::string, FieldDataType, bool>>& required_fields, const nlohmann::json& j) {
+            for (const auto& [field, expected_type, is_required] : required_fields) {
+                if (!j.contains(field)) {
+                    if (is_required) {
+                        throw std::runtime_error("Missing required field: " + field);
+                    }
+                    // Field is not required
+                    continue;  
+                }
+
+                // check field type
+                switch (expected_type) {
+                    case FieldDataType::String:
+                        if (!j[field].is_string()) {
+                            throw std::runtime_error("Field '" + field + "' should be a string");
+                        }
+                        break;
+                    case FieldDataType::Integer:
+                        if (!j[field].is_number_integer()) {
+                            throw std::runtime_error("Field '" + field + "' should be an integer");
+                        }
+                        break;
+                    case FieldDataType::Float:
+                        if (!j[field].is_number_float()) {
+                            throw std::runtime_error("Field '" + field + "' should be a float");
+                        }
+                        break;
+                    case FieldDataType::Boolean:
+                        if (!j[field].is_boolean()) {
+                            throw std::runtime_error("Field '" + field + "' should be a boolean");
+                        }
+                        break;
+                    case FieldDataType::Object:
+                        if (!j[field].is_object()) {
+                            throw std::runtime_error("Field '" + field + "' should be an object");
+                        }
+                        break;
+                    case FieldDataType::Array:
+                        if (!j[field].is_array()) {
+                            throw std::runtime_error("Field '" + field + "' should be an array");
+                        }
+                        break;
+                    default:
+                        throw std::runtime_error("Unknown field type for field: " + field);
+                }
+            }
+        }
+    }
 }
