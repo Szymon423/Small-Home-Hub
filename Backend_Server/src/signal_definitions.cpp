@@ -51,7 +51,9 @@ namespace SignalDefinitions {
             // Validate required fields
             static const std::vector<std::tuple<std::string, Utilities::JSON::FieldDataType, bool>> required_fields {
                 { "IsArchived", Utilities::JSON::FieldDataType::Boolean, true },
+                { "IsSteerable", Utilities::JSON::FieldDataType::Boolean, true },
                 { "GroupID", Utilities::JSON::FieldDataType::Integer, true },
+                { "DeviceID", Utilities::JSON::FieldDataType::Integer, true },
                 { "DataType", Utilities::JSON::FieldDataType::Integer, true },
                 { "Alarms", Utilities::JSON::FieldDataType::String, true },
                 { "Labels", Utilities::JSON::FieldDataType::String, true },
@@ -64,15 +66,17 @@ namespace SignalDefinitions {
             std::lock_guard<std::mutex> lock(ConfigDB::GetMutex());
 
             SQLite::Statement query(*ConfigDB::Get(), 
-                "INSERT INTO Signals (Name, Description, DataType, IsArchived, GroupID, Alarms, Labels) VALUES (?, ?, ?, ?, ?, ?, ?)");
+                "INSERT INTO Signals (Name, Description, DataType, IsArchived, IsSteerable, GroupID, DeviceID, Alarms, Labels) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
             
             query.bind(1, requestBody["Name"].get<std::string>());
             query.bind(2, requestBody["Description"].get<std::string>());
             query.bind(3, requestBody["Description"].get<int>());
             query.bind(4, static_cast<int>(requestBody["IsArchived"].get<bool>()));
-            query.bind(5, requestBody["GroupID"].get<int>());
-            query.bind(6, requestBody["Alarms"].dump());
-            query.bind(7, requestBody["Labels"].dump());
+            query.bind(5, static_cast<int>(requestBody["IsSteerable"].get<bool>()));
+            query.bind(6, requestBody["GroupID"].get<int>());
+            query.bind(7, requestBody["DeviceID"].get<int>());
+            query.bind(8, requestBody["Alarms"].dump());
+            query.bind(9, requestBody["Labels"].dump());
 
             try {
                 query.exec();
@@ -122,7 +126,9 @@ namespace SignalDefinitions {
             static const std::vector<std::tuple<std::string, Utilities::JSON::FieldDataType, bool>> required_fields {
                 { "ID", Utilities::JSON::FieldDataType::Integer, true },
                 { "IsArchived", Utilities::JSON::FieldDataType::Boolean, false },
+                { "IsSteerable", Utilities::JSON::FieldDataType::Boolean, false },
                 { "GroupID", Utilities::JSON::FieldDataType::Integer, false },
+                { "DeviceID", Utilities::JSON::FieldDataType::Integer, false },
                 { "DataType", Utilities::JSON::FieldDataType::Integer, false },
                 { "Alarms", Utilities::JSON::FieldDataType::String, false },
                 { "Labels", Utilities::JSON::FieldDataType::String, false },
@@ -150,9 +156,17 @@ namespace SignalDefinitions {
                 updateFields.push_back("IsArchived = ?");
                 bindValues.push_back(std::to_string(requestBody["IsArchived"].get<bool>() ? 1 : 0));
             }
+            if (requestBody.contains("IsSteerable")) {
+                updateFields.push_back("IsSteerable = ?");
+                bindValues.push_back(std::to_string(requestBody["IsSteerable"].get<bool>() ? 1 : 0));
+            }
             if (requestBody.contains("GroupID")) {
                 updateFields.push_back("GroupID = ?");
                 bindValues.push_back(std::to_string(requestBody["GroupID"].get<int>()));
+            }
+            if (requestBody.contains("DeviceID")) {
+                updateFields.push_back("DeviceID = ?");
+                bindValues.push_back(std::to_string(requestBody["DeviceID"].get<int>()));
             }
             updateFields.push_back("Alarms = ?");
             bindValues.push_back(requestBody["Alarms"].dump());

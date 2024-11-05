@@ -6,6 +6,7 @@
 #include "events.hpp"
 #include "authentication.hpp"
 #include "diagnostics.hpp"
+#include "devices.hpp"
 #include <Common/runtime.hpp>
 #include <Common/configuration.hpp>
 #include <Common/log.hpp>
@@ -27,6 +28,9 @@ std::map<std::pair<std::string, std::string>, MyRequestHandler::RouteHandler> My
     {{"POST", "/api/signals/definitions/update"}, std::bind(&SignalDefinitions::update_signal, std::placeholders::_1, std::placeholders::_2)},
     {{"POST", "/api/signals/definitions/delete"}, std::bind(&SignalDefinitions::delete_signal, std::placeholders::_1, std::placeholders::_2)},
     {{"GET",  "/api/signals/values/get"}, std::bind(&SignalValues::get_all, std::placeholders::_1, std::placeholders::_2)},
+    
+    {{"GET",  "/api/devices/types/get"}, std::bind(&Devices::get_all_types, std::placeholders::_1, std::placeholders::_2)},
+    {{"GET",  "/api/devices/get"}, std::bind(&Devices::get_all_devices, std::placeholders::_1, std::placeholders::_2)},
     
     {{"GET",  "/api/events/get"}, std::bind(&EventsHandling::get_all, std::placeholders::_1, std::placeholders::_2)},
     {{"POST", "/api/events/acknowledge"}, std::bind(&EventsHandling::acknowledge, std::placeholders::_1, std::placeholders::_2)},

@@ -47,11 +47,13 @@ namespace Signals {
     public:
         std::uint16_t ID{ 0 };                  // ID of signal
         std::uint16_t groupID{ 0 };             // ID of associated group
+        std::uint16_t deviceID{ 0 };            // ID of associated device
         DataType dataType{ DataType::Unknown }; // Data type of this signal 
         Alarm alarmLow;                         // Alarm low thing
         Alarm alarmHigh;                        // Alarm high thing
-        bool isArchived{ true };                // When set to true - signal is archived
         Label label;                            // All labels like unit, low/high flag text
+        bool isArchived{ true };                // When set to true - signal is archived
+        bool isSteerable{ false };              // When set to true - this signal can be controlled from system
         char name[SystemConstants::SignalNameLength]{ "Name" };                         // name of signal
         char description[SystemConstants::SignalDescriptionLength]{ "Description" };    // description of signal
         

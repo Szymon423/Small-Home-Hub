@@ -22,8 +22,10 @@ namespace Signals {
         return {
             { "ID", ID },
             { "GroupID", groupID },
+            { "DeviceID", deviceID },
             { "DataType", DataTypeToInt(dataType) },
             { "IsArchived", isArchived },
+            { "IsSteerable", isSteerable },
             { "AlarmLow", {
                     { "Enabled", alarmLow.enabled },
                     { "Threshold", alarmLow.threshold },
@@ -75,6 +77,8 @@ namespace Signals {
                 CopyStringToArray(query.getColumn(cnt++).getString(), def.description);
                 def.dataType = DataTypeFromInt(query.getColumn(cnt++).getInt());
                 def.isArchived = (query.getColumn(cnt++).getInt() == 1);
+                def.isSteerable = (query.getColumn(cnt++).getInt() == 1);
+                def.deviceID = query.getColumn(cnt++).getInt();
                 definitions.push_back(def);
             }
         }
