@@ -15,4 +15,14 @@ namespace Devices {
     /// @param request HTTP request
     /// @param response HTTP response
     void get_all_devices(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) noexcept;
+    
+    /// @brief Adds new Devices
+    /// @param request HTTP request
+    /// @param response HTTP response
+    void add_device(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) noexcept;
+    
+    /// @brief Deletes Devices
+    /// @param request HTTP request
+    /// @param response HTTP response
+    void delete_device(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) noexcept;
 }

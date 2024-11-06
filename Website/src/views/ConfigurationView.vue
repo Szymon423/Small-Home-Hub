@@ -1,217 +1,206 @@
 <template>
 	<div class="settings-container">
-		<LoadingOverlay :is-visible="isLoading" :message="loadingMessage"/>
+		<LoadingOverlay :is-visible="isLoading" :message="loadingMessage" />
 		<h1 class="settings-title">
-			<Settings class="settings-icon" />
-			Configuration
+			<LayoutDashboard class="settings-icon" />
+			Devices Configuration
 		</h1>
 
+		<!-- Lista urządzeń -->
 		<div class="settings-grid">
-			<!-- Device Configuration Section -->
 			<div class="settings-section">
 				<h2 class="section-title">
-					<Network class="section-icon" />
-					Network Configuration
+					<CircuitBoard class="section-icon" />
+					Configured Devices
 				</h2>
-				<div class="settings-form">
-					<div class="form-group">
-						<label for="deviceIp">Device IP Address</label>
-						<div class="input-with-icon">
-							<Wifi class="input-icon" />
-							<input type="text" id="deviceIp" v-model="settings.deviceIp"
-								placeholder="e.g. 192.168.1.100">
-						</div>
-					</div>
 
-					<div class="form-group">
-						<label for="deviceSubnetMask">Subnet Mask</label>
-						<div class="input-with-icon">
-							<Network class="input-icon" />
-							<input type="text" id="deviceSubnetMask" v-model="settings.deviceSubnetMask"
-								placeholder="e.g. 255.255.255.0">
+				<div class="devices-list">
+					<div v-for="device in devices" :key="device.DeviceID" class="device-card">
+						<div class="device-info">
+							<CircuitBoard class="device-icon" />
+							<div class="device-details">
+								<span class="device-name">{{ device.Description }}</span>
+								<span class="device-type">{{ getDeviceTypeName(device.DeviceTypeID) }}</span>
+							</div>
 						</div>
+						<button class="delete-button" @click="deleteDevice(device.DeviceID)">
+							<Trash2 class="delete-icon" />
+						</button>
 					</div>
 				</div>
 			</div>
 
-			<!-- Device Identity Section -->
+			<!-- Formularz dodawania nowego urządzenia -->
 			<div class="settings-section">
 				<h2 class="section-title">
-					<Server class="section-icon" />
-					Device Identity
+					<PlusCircle class="section-icon" />
+					Add New Device
 				</h2>
+
 				<div class="settings-form">
 					<div class="form-group">
-						<label for="deviceName">Device Name</label>
+						<label for="deviceType">Device Type</label>
 						<div class="input-with-icon">
-							<Tag class="input-icon" />
-							<input type="text" id="deviceName" v-model="settings.deviceName"
-								placeholder="e.g. Device-01">
+							<CircuitBoard class="input-icon" />
+							<select id="deviceType" v-model="newDevice.typeId" class="select-input">
+								<option value="">Select device type</option>
+								<option v-for="type in deviceTypes" :key="type.TypeID" :value="type.TypeID">
+									{{ type.Name }}
+								</option>
+							</select>
 						</div>
+					</div>
+
+					<div class="form-group">
+						<label for="deviceDescription">Description</label>
+						<div class="input-with-icon">
+							<FileText class="input-icon" />
+							<input type="text" id="deviceDescription" v-model="newDevice.description"
+								placeholder="Enter device description">
+						</div>
+					</div>
+
+					<div class="settings-actions">
+						<button class="action-button save" @click="addDevice">
+							<Save class="button-icon" />
+							Add Device
+						</button>
 					</div>
 				</div>
 			</div>
-
-			<!-- Server Configuration Section -->
-			<div class="settings-section">
-				<h2 class="section-title">
-					<ServerCog class="section-icon" />
-					Server Configuration
-				</h2>
-				<div class="settings-form">
-					<div class="form-group">
-						<label for="backendServerPort">Backend Server Port</label>
-						<div class="input-with-icon">
-							<Container class="input-icon" />
-							<input type="number" id="backendServerPort" v-model="settings.backendServerPort"
-								placeholder="e.g. 8080">
-						</div>
-					</div>
-
-					<div class="form-group">
-						<label for="communicationServerPort">Communication Server Port</label>
-						<div class="input-with-icon">
-							<Share2 class="input-icon" />
-							<input type="number" id="communicationServerPort" v-model="settings.communicationServerPort"
-								placeholder="e.g. 9090">
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<!-- Data Management Section -->
-			<div class="settings-section">
-				<h2 class="section-title">
-					<Database class="section-icon" />
-					Data Management
-				</h2>
-				<div class="settings-form">
-					<div class="form-group">
-						<label for="dataRetentionPeriod">Data Retention Period (days)</label>
-						<div class="input-with-icon">
-							<Clock class="input-icon" />
-							<input type="number" id="dataRetentionPeriod" v-model="settings.dataRetentionPeriod"
-								placeholder="e.g. 30">
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div class="settings-actions">
-			<button class="action-button cancel" @click="resetSettings">
-				<XCircle class="button-icon" />
-				Cancel
-			</button>
-			<button class="action-button save" @click="saveSettings">
-				<Save class="button-icon" />
-				Save Changes
-			</button>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import LoadingOverlay from '../components/loadingOverlay.vue'
 import {
-	Settings,
-	Network,
-	Wifi,
-	Server,
-	ServerCog,
-	Container,
-	Share2,
-	Database,
-	Clock,
-	Tag,
+	LayoutDashboard,
+	CircuitBoard,
+	PlusCircle,
 	Save,
-	XCircle
+	Trash2,
+	FileText
 } from 'lucide-vue-next'
 
-// For loading overlay
+interface DeviceType {
+	Name: string
+	Signals: Array<{
+		IsAnalog: boolean
+		IsSteerable: boolean
+		Name: string
+		Unit: string
+	}>
+	TypeID: number
+}
+
+interface Device {
+	Description: string
+	DeviceID: number
+	DeviceTypeID: number
+}
+
 const isLoading = ref(false)
 const loadingMessage = ref('')
-
-const settings = ref({
-	deviceIp: '',
-	deviceSubnetMask: '',
-	deviceName: '',
-	dataRetentionPeriod: '',
-	backendServerPort: '',
-	communicationServerPort: ''
+const devices = ref<Device[]>([])
+const deviceTypes = ref<DeviceType[]>([])
+const newDevice = ref({
+	typeId: '',
+	description: ''
 })
 
-const originalSettings = ref({})
-
-const fetchSettings = async () => {
-    isLoading.value = true
-    loadingMessage.value = 'Loading settings...'
-    
-    try {
-        const response = await axios.get('http://localhost:9999/api/configuration/get')
-        settings.value = response.data
-        originalSettings.value = { ...response.data }
-    } catch (error) {
-        console.error('Błąd podczas pobierania ustawień:', error)
-        throw error
-    } finally {
-        isLoading.value = false
-    }
+// Pobieranie typów urządzeń
+const fetchDeviceTypes = async () => {
+	try {
+		const response = await axios.get('http://localhost:9999/api/devices/types/get')
+		deviceTypes.value = response.data
+	} catch (error) {
+		console.error('Error fetching device types:', error)
+	}
 }
 
-const saveSettings = async () => {
-    const dataToUpdate = Object.entries(settings.value).reduce((acc, [key, value]) => {
-        if (originalSettings.value[key] !== value) {
-            acc[key] = value;
-        }
-        return acc;
-    }, {});
-
-    if (Object.keys(dataToUpdate).length === 0) {
-        console.log('No changes to save');
-        return;
-    }
-
-    isLoading.value = true
-    loadingMessage.value = 'Saving changes...'
-
-    try {
-        const response = await axios.post('http://localhost:9999/api/configuration/update',
-		    dataToUpdate, {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            }
-        );
-
-        if (response.status === 200) {
-            console.log('Settings saved successfully:', dataToUpdate);
-            await fetchSettings();
-        }
-    } catch (error) {
-        if (axios.isAxiosError(error)) {
-            console.error('Błąd podczas zapisywania ustawień:', {
-                message: error.message,
-                status: error.response?.status,
-                data: error.response?.data
-            });
-        } else {
-            console.error('Nieoczekiwany błąd:', error);
-        }
-        throw error;
-    } finally {
-        isLoading.value = false
-    }
-};
-
-const resetSettings = () => {
-	settings.value = { ...originalSettings.value }
+// Pobieranie listy urządzeń
+const fetchDevices = async () => {
+	try {
+		const response = await axios.get('http://localhost:9999/api/devices/get')
+		devices.value = response.data
+	} catch (error) {
+		console.error('Error fetching devices:', error)
+	}
 }
 
-// Fetch settings when component is mounted
-fetchSettings()
+// Dodawanie nowego urządzenia
+const addDevice = async () => {
+	if (!newDevice.value.typeId || !newDevice.value.description) {
+		alert('Please fill in all fields')
+		return
+	}
+
+	isLoading.value = true
+	loadingMessage.value = 'Adding new device...'
+
+	try {
+		// TODO: Implement actual API call
+		// await axios.post('http://localhost:9999/api/devices/add', {
+		//   deviceTypeId: newDevice.value.typeId,
+		//   description: newDevice.value.description
+		// })
+
+		await fetchDevices()
+		newDevice.value = {
+			typeId: '',
+			description: ''
+		}
+	} catch (error) {
+		console.error('Error adding device:', error)
+	} finally {
+		isLoading.value = false
+	}
+}
+
+// Usuwanie urządzenia
+const deleteDevice = async (deviceId: number) => {
+	if (!confirm('Are you sure you want to delete this device?')) {
+		return
+	}
+
+	isLoading.value = true
+	loadingMessage.value = 'Deleting device...'
+
+	try {
+		// TODO: Implement actual API call
+		// await axios.delete(`http://localhost:9999/api/devices/delete/${deviceId}`)
+		await fetchDevices()
+	} catch (error) {
+		console.error('Error deleting device:', error)
+	} finally {
+		isLoading.value = false
+	}
+}
+
+// Pomocnicza funkcja do pobrania nazwy typu urządzenia
+const getDeviceTypeName = (typeId: number): string => {
+	const deviceType = deviceTypes.value.find(type => type.TypeID === typeId)
+	return deviceType?.Name || 'Unknown Type'
+}
+
+onMounted(async () => {
+	isLoading.value = true
+	loadingMessage.value = 'Loading configuration...'
+
+	try {
+		await Promise.all([
+			fetchDeviceTypes(),
+			fetchDevices()
+		])
+	} catch (error) {
+		console.error('Error during initialization:', error)
+	} finally {
+		isLoading.value = false
+	}
+})
 </script>
 
 <style scoped>
@@ -240,7 +229,6 @@ fetchSettings()
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 	gap: 24px;
-	margin-bottom: 30px;
 }
 
 .settings-section {
@@ -263,6 +251,78 @@ fetchSettings()
 	width: 20px;
 	height: 20px;
 	color: #3498db;
+}
+
+.devices-list {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.device-card {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 12px;
+	background: #f8fafc;
+	border-radius: 8px;
+	transition: all 0.3s;
+	border-left: 3px solid transparent;
+}
+
+.device-card:hover {
+	background: #f1f5f9;
+	transform: translateX(4px);
+}
+
+.device-info {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.device-icon {
+	width: 18px;
+	height: 18px;
+	color: #3498db;
+}
+
+.device-details {
+	display: flex;
+	flex-direction: column;
+}
+
+.device-name {
+	font-size: 0.9rem;
+	color: #334155;
+	font-weight: 500;
+}
+
+.device-type {
+	font-size: 0.8rem;
+	color: #64748b;
+}
+
+.delete-button {
+	background: none;
+	border: none;
+	padding: 8px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 6px;
+	transition: all 0.3s;
+}
+
+.delete-button:hover {
+	background: rgba(239, 68, 68, 0.1);
+}
+
+.delete-icon {
+	width: 18px;
+	height: 18px;
+	color: #ef4444;
 }
 
 .settings-form {
@@ -297,29 +357,32 @@ fetchSettings()
 	color: #94a3b8;
 }
 
-input {
+input,
+.select-input {
 	width: 100%;
 	padding: 10px 12px 10px 40px;
 	border: 1px solid #e2e8f0;
 	border-radius: 8px;
 	font-size: 0.9rem;
 	transition: all 0.3s;
+	background-color: white;
 }
 
-input:focus {
+input:focus,
+.select-input:focus {
 	outline: none;
 	border-color: #3498db;
 	box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
 }
 
-input:hover {
+input:hover,
+.select-input:hover {
 	border-color: #3498db;
 }
 
 .settings-actions {
 	display: flex;
 	justify-content: flex-end;
-	gap: 12px;
 	margin-top: 20px;
 }
 
@@ -335,11 +398,6 @@ input:hover {
 	border: none;
 }
 
-.button-icon {
-	width: 18px;
-	height: 18px;
-}
-
 .action-button.save {
 	background-color: #3498db;
 	color: white;
@@ -349,18 +407,30 @@ input:hover {
 	background-color: #2980b9;
 }
 
-.action-button.cancel {
-	background-color: #e2e8f0;
-	color: #64748b;
-}
-
-.action-button.cancel:hover {
-	background-color: #cbd5e1;
+.button-icon {
+	width: 18px;
+	height: 18px;
 }
 
 @media (max-width: 768px) {
 	.settings-grid {
 		grid-template-columns: 1fr;
+	}
+
+	.settings-container {
+		padding: 10px;
+	}
+
+	.settings-title {
+		font-size: 1.5rem;
+	}
+
+	.device-card {
+		padding: 10px;
+	}
+
+	.device-name {
+		font-size: 0.85rem;
 	}
 }
 </style>

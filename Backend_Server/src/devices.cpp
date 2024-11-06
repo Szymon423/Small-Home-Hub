@@ -75,4 +75,68 @@ namespace Devices {
             Logger::error("Unexpected error occurred while reaading devices");
         }
     }
+
+    void add_device(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) noexcept {
+        try {
+            Logger::trace("Adding new device to DB.");
+            
+            nlohmann::json j = nlohmann::json::array();
+            
+
+
+            // Response
+            response.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
+            response.setContentType("application/json");
+            std::ostream& out = response.send();
+            out << j.dump();
+        }
+        catch (const std::exception& e) {
+            response.setStatus(Poco::Net::HTTPResponse::HTTP_INTERNAL_SERVER_ERROR);
+            response.setContentType("application/json");
+            std::ostream& out = response.send();
+            nlohmann::json errorJson = { {"status", "error"}, {"message", "Internal server error"} };
+            out << errorJson.dump();
+            Logger::error("Internal Server Error: {}", e.what());
+        }
+        catch (...) {
+            response.setStatus(Poco::Net::HTTPResponse::HTTP_INTERNAL_SERVER_ERROR);
+            response.setContentType("application/json");
+            std::ostream& out = response.send();
+            nlohmann::json errorJson = {{"status", "error"}, {"message", "An unexpected error occurred"}};
+            out << errorJson.dump();
+            Logger::error("Unexpected error occurred while adding devices");
+        }
+    }
+
+    void delete_device(Poco::Net::HTTPServerRequest& request, Poco::Net::HTTPServerResponse& response) noexcept {
+        try {
+            Logger::trace("Deleting device from DB.");
+            
+            nlohmann::json j = nlohmann::json::array();
+            
+
+
+            // Response
+            response.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
+            response.setContentType("application/json");
+            std::ostream& out = response.send();
+            out << j.dump();
+        }
+        catch (const std::exception& e) {
+            response.setStatus(Poco::Net::HTTPResponse::HTTP_INTERNAL_SERVER_ERROR);
+            response.setContentType("application/json");
+            std::ostream& out = response.send();
+            nlohmann::json errorJson = { {"status", "error"}, {"message", "Internal server error"} };
+            out << errorJson.dump();
+            Logger::error("Internal Server Error: {}", e.what());
+        }
+        catch (...) {
+            response.setStatus(Poco::Net::HTTPResponse::HTTP_INTERNAL_SERVER_ERROR);
+            response.setContentType("application/json");
+            std::ostream& out = response.send();
+            nlohmann::json errorJson = {{"status", "error"}, {"message", "An unexpected error occurred"}};
+            out << errorJson.dump();
+            Logger::error("Unexpected error occurred while adding devices");
+        }
+    }
 }

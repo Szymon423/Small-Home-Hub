@@ -47,9 +47,9 @@ CREATE TABLE IF NOT EXISTS "SignalDefinitions" (
 	"DeviceID"	INTEGER NOT NULL,
 	PRIMARY KEY("ID")
 );
-INSERT INTO "DeviceTypes" ("DeviceTypeID","Name","Signals") VALUES (1,'Temperature and Humidity Sensor','[]');
-INSERT INTO "DeviceTypes" ("DeviceTypeID","Name","Signals") VALUES (2,'Closing Sensor','[]');
-INSERT INTO "DeviceTypes" ("DeviceTypeID","Name","Signals") VALUES (3,'Lights switch','[]');
+INSERT INTO "DeviceTypes" ("DeviceTypeID","Name","Signals") VALUES (1,'Temperature and Humidity Sensor','[{"IsAnalog": true, "IsSteerable": false, "Name": "Temperature", "Unit": "°C" }, {"IsAnalog": true, "IsSteerable": false, "Name": "Humidity", "Unit": "%" }]');
+INSERT INTO "DeviceTypes" ("DeviceTypeID","Name","Signals") VALUES (2,'Closing Sensor','[{"IsAnalog": false, "IsSteerable": false, "Name": "Closed", "Unit": "" }]');
+INSERT INTO "DeviceTypes" ("DeviceTypeID","Name","Signals") VALUES (3,'Lights switch','[{"IsAnalog": false, "IsSteerable": true, "Name": "Lights", "Unit": "" }]');
 INSERT INTO "Devices" ("DeviceID","DeviceTypeID","Description") VALUES (1,1,'Temperature and humidity sensor in small room');
 INSERT INTO "Devices" ("DeviceID","DeviceTypeID","Description") VALUES (2,3,'Main light in small room');
 INSERT INTO "Devices" ("DeviceID","DeviceTypeID","Description") VALUES (3,3,'Desk light in small room');

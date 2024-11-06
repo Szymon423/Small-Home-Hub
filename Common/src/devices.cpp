@@ -6,6 +6,7 @@ namespace Devices {
     nlohmann::json Signal::ToJson() const {
         return {
             { "IsAnalog", isAnalog },
+            { "IsSteerable", isSteerable },
             { "Name", name },
             { "Unit", unit }
         };
@@ -14,6 +15,7 @@ namespace Devices {
     Signal Signal::FromJson(const nlohmann::json& j) {
         Signal signal;
         signal.isAnalog = j["IsAnalog"];
+        signal.isSteerable = j["IsSteerable"];
         signal.name = j["Name"];
         signal.unit = j["Unit"];
         return signal;

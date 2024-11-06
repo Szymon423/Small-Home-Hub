@@ -10,6 +10,7 @@ namespace Devices {
     class Signal {
     public:
         bool isAnalog;        // when set to true - this signal is analog type
+        bool isSteerable;     // when set to true - this signal value can be changed from system
         std::string name;     // Template name of this signal
         std::string unit;     // Template unit of this signal
 
