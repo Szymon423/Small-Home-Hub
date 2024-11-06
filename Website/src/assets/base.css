@@ -1,0 +1,48 @@
+:root {
+    /* Kolory podstawowe */
+    --color-primary: #3b82f6;
+    --color-primary-dark: #2563eb;
+    --color-primary-light: #dbeafe;
+
+    /* Kolory tekstu */
+    --color-text-primary: #1f2937;
+    --color-text-secondary: #6b7280;
+
+    /* Kolory tła */
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f8f9fa;
+    --color-background-hover: #f3f4f6;
+
+    /* Kolory obramowania */
+    --color-border: #e2e8f0;
+
+    /* Kolory stanów */
+    --color-success: #10b981;
+    --color-success-light: #d1fae5;
+    --color-danger: #ef4444;
+    --color-danger-dark: #dc2626;
+    --color-warning: #f59e0b;
+    --color-warning-light: #fef3c7;
+
+    /* Cienie */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+    /* Zaokrąglenia */
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 12px;
+
+    /* Odstępy */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+
+    /* Przejścia */
+    --transition-base: all 0.2s ease;
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}

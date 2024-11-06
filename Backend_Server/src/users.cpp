@@ -216,7 +216,7 @@ namespace Users {
         try {
             Logger::trace("Deleting user from DB.");
 
-           // Parse JSON from request body
+            // Parse JSON from request body
             nlohmann::json requestBody;
             try {
                 requestBody = nlohmann::json::parse(request.stream());

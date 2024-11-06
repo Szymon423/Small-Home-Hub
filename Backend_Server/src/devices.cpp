@@ -80,9 +80,22 @@ namespace Devices {
         try {
             Logger::trace("Adding new device to DB.");
             
-            nlohmann::json j = nlohmann::json::array();
-            
+            // Parse JSON from request body
+            nlohmann::json requestBody = nlohmann::json::parse(request.stream());
 
+            // Validate required fields
+            static const std::vector<std::tuple<std::string, Utilities::JSON::FieldDataType, bool>> required_fields {
+                { "DeviceTypeID", Utilities::JSON::FieldDataType::Integer, true },
+                { "Description", Utilities::JSON::FieldDataType::String, true }
+            };
+            Utilities::JSON::Validate(required_fields, requestBody);
+
+            // Lock mutex before database operations
+            std::lock_guard<std::mutex> lock(ConfigDB::GetMutex());
+            SQLite::Statement query(*ConfigDB::Get(), "INSERT INTO Devices (DeviceTypeID, Description) VALUES (?, ?)");
+            query.bind(1, requestBody["DeviceTypeID"].get<int>());
+            query.bind(2, requestBody["Description"].get<std::string>());
+            query.exec();
 
             // Response
             response.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
@@ -112,9 +125,38 @@ namespace Devices {
         try {
             Logger::trace("Deleting device from DB.");
             
-            nlohmann::json j = nlohmann::json::array();
-            
+            // Parse JSON from request body
+            nlohmann::json requestBody;
+            try {
+                requestBody = nlohmann::json::parse(request.stream());
+            } 
+            catch (const nlohmann::json::parse_error& e) {
+                throw std::runtime_error("Invalid JSON: " + std::string(e.what()));
+            }
 
+            // Validate required fields
+            static const std::vector<std::tuple<std::string, Utilities::JSON::FieldDataType, bool>> required_fields {
+                { "DeviceID", Utilities::JSON::FieldDataType::Integer, true }
+            };
+            Utilities::JSON::Validate(required_fields, requestBody);
+
+            // Lock mutex before database operations
+            std::lock_guard<std::mutex> lock(ConfigDB::GetMutex());
+
+            SQLite::Statement query(*ConfigDB::Get(), "DELETE FROM Devices WHERE DeviceID = ?");
+            
+            query.bind(1, requestBody["DeviceID"].get<int>());
+
+            try {
+                query.exec();
+            } 
+            catch (const SQLite::Exception& e) {
+                throw std::runtime_error("SQLite error: " + std::string(e.what()));
+            }
+
+            if (query.getChanges() == 0) {
+                throw std::runtime_error("No record found with the given UserID");
+            }
 
             // Response
             response.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
@@ -136,7 +178,7 @@ namespace Devices {
             std::ostream& out = response.send();
             nlohmann::json errorJson = {{"status", "error"}, {"message", "An unexpected error occurred"}};
             out << errorJson.dump();
-            Logger::error("Unexpected error occurred while adding devices");
+            Logger::error("Unexpected error occurred while deleting device");
         }
     }
 }

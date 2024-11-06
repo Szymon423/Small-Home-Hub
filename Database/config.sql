@@ -69,15 +69,15 @@ INSERT INTO "Update" ("Key","Value") VALUES ('timestamp',1730570975);
 INSERT INTO "Users" ("UserID","Name","Surname","Login","Password","Privileges") VALUES (1,'serwis','serwis','serwis','serwis',1);
 INSERT INTO "Users" ("UserID","Name","Surname","Login","Password","Privileges") VALUES (2,'admin','admin','admin','admin',2);
 INSERT INTO "Users" ("UserID","Name","Surname","Login","Password","Privileges") VALUES (3,'Szymon','Wąchała','swachala','swachala',3);
-INSERT INTO "SignalDefinitions" ("ID","GroupID","Alarms","Labels","Name","Description","DataType","IsArchived","IsSteerable","DeviceID") VALUES (1,1,'{}','{}','Temperature','Small room temperature sensor',1,1,0,1);
-INSERT INTO "SignalDefinitions" ("ID","GroupID","Alarms","Labels","Name","Description","DataType","IsArchived","IsSteerable","DeviceID") VALUES (2,1,'{}','{}','Humidity','Small room humidity sensor',1,1,0,1);
+INSERT INTO "SignalDefinitions" ("ID","GroupID","Alarms","Labels","Name","Description","DataType","IsArchived","IsSteerable","DeviceID") VALUES (1,1,'{}','{"Unit": "°C"}','Temperature','Small room temperature sensor',1,1,0,1);
+INSERT INTO "SignalDefinitions" ("ID","GroupID","Alarms","Labels","Name","Description","DataType","IsArchived","IsSteerable","DeviceID") VALUES (2,1,'{}','{"Unit": "%"}','Humidity','Small room humidity sensor',1,1,0,1);
 INSERT INTO "SignalDefinitions" ("ID","GroupID","Alarms","Labels","Name","Description","DataType","IsArchived","IsSteerable","DeviceID") VALUES (3,1,'{}','{}','Main light','Small room main light switch',2,1,1,2);
 INSERT INTO "SignalDefinitions" ("ID","GroupID","Alarms","Labels","Name","Description","DataType","IsArchived","IsSteerable","DeviceID") VALUES (4,1,'{}','{}','Desk light','Small room desk light switch',2,1,1,3);
 INSERT INTO "SignalDefinitions" ("ID","GroupID","Alarms","Labels","Name","Description","DataType","IsArchived","IsSteerable","DeviceID") VALUES (5,1,'{}','{}','Doors','Small room door closing sensor',2,1,0,4);
 INSERT INTO "SignalDefinitions" ("ID","GroupID","Alarms","Labels","Name","Description","DataType","IsArchived","IsSteerable","DeviceID") VALUES (6,1,'{}','{}','Windows','Small room windows closing sensor',2,1,0,5);
 INSERT INTO "SignalDefinitions" ("ID","GroupID","Alarms","Labels","Name","Description","DataType","IsArchived","IsSteerable","DeviceID") VALUES (7,2,'{}','{}','Main light','Corridor main light switch',2,1,1,7);
-INSERT INTO "SignalDefinitions" ("ID","GroupID","Alarms","Labels","Name","Description","DataType","IsArchived","IsSteerable","DeviceID") VALUES (8,2,'{}','{}','Temperature','Small room temperature sensor',1,1,0,6);
-INSERT INTO "SignalDefinitions" ("ID","GroupID","Alarms","Labels","Name","Description","DataType","IsArchived","IsSteerable","DeviceID") VALUES (9,0,'{}','{}','Humidity','Small room humidity sensor',1,1,0,6);
+INSERT INTO "SignalDefinitions" ("ID","GroupID","Alarms","Labels","Name","Description","DataType","IsArchived","IsSteerable","DeviceID") VALUES (8,2,'{}','{"Unit": "°C"}','Temperature','Small room temperature sensor',1,1,0,6);
+INSERT INTO "SignalDefinitions" ("ID","GroupID","Alarms","Labels","Name","Description","DataType","IsArchived","IsSteerable","DeviceID") VALUES (9,0,'{}','{"Unit": "%"}','Humidity','Small room humidity sensor',1,1,0,6);
 CREATE TRIGGER tr_Groups_insert AFTER INSERT ON Groups
 BEGIN
     UPDATE "Update" SET Value = (strftime('%s', 'now')) WHERE Key = 'timestamp';
