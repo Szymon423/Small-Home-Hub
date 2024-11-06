@@ -1,0 +1,3 @@
+- [ ] add group ID to Device table in config.db
+- [ ] add groups in configuration view according to device groups
+- [ ] Fix editing signals in devices settings

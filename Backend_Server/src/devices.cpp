@@ -101,7 +101,8 @@ namespace Devices {
             response.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
             response.setContentType("application/json");
             std::ostream& out = response.send();
-            out << j.dump();
+            nlohmann::json responseJson = {{"status", "success"}, {"message", "Device added successfully"}};
+            out << responseJson.dump();
         }
         catch (const std::exception& e) {
             response.setStatus(Poco::Net::HTTPResponse::HTTP_INTERNAL_SERVER_ERROR);
@@ -162,7 +163,8 @@ namespace Devices {
             response.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
             response.setContentType("application/json");
             std::ostream& out = response.send();
-            out << j.dump();
+            nlohmann::json responseJson = {{"status", "success"}, {"message", "Device deleted successfully"}};
+            out << responseJson.dump();
         }
         catch (const std::exception& e) {
             response.setStatus(Poco::Net::HTTPResponse::HTTP_INTERNAL_SERVER_ERROR);
